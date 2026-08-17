@@ -7,20 +7,24 @@ export const MAX_VOLUME = 0.5; // Global cap background music at 50%
 let currentMaxVolume = MAX_VOLUME; // Dynamic cap that stages can modify
 
 export function forceTrack(trackUrl) {
+    const base = import.meta.env.BASE_URL || '/';
+    let url = trackUrl.startsWith('/') ? trackUrl.substring(1) : trackUrl;
+    const finalUrl = base.endsWith('/') ? base + url : base + '/' + url;
+    
     if (isPlaying) {
         const currentAudio = activeChannel === 'A' ? channelA : channelB;
-        if (currentAudio.src.endsWith(trackUrl)) {
+        if (currentAudio.src.endsWith(url) || currentAudio.src.endsWith(trackUrl)) {
             currentAudio.volume = currentMaxVolume;
             return;
         }
         currentAudio.pause();
-        currentAudio.src = trackUrl;
+        currentAudio.src = finalUrl;
         currentAudio.loop = true;
         currentAudio.currentTime = 0;
         currentAudio.volume = currentMaxVolume;
         currentAudio.play().catch(e => console.error(e));
     } else {
-        pendingTrack = trackUrl;
+        pendingTrack = finalUrl;
     }
 }
 
