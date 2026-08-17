@@ -89,9 +89,12 @@ class Pixel {
 
 export async function init() {
     try {
-        let response = await fetch('/public/messages.json');
+        const base = import.meta.env.BASE_URL || '/';
+        const msgUrl = base.endsWith('/') ? base + 'messages.json' : base + '/messages.json';
+        
+        let response = await fetch(msgUrl);
         if (!response.ok) {
-            response = await fetch('/public/messages.json');
+            response = await fetch(msgUrl);
         }
         if (response.ok) {
             const data = await response.json();
