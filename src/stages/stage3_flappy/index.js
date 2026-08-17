@@ -240,10 +240,8 @@ function loop(timestamp) {
     if (dt > 100) dt = 16.66; // cap dt for lag spikes
     
     // Calculate a multiplier relative to 60fps (16.66ms per frame)
-    // If the user was running at 144Hz previously, it ran 2.4x faster.
-    // Let's multiply the base speeds by 2.0 so it feels fast and responsive 
-    // at 60fps (which is likely what GitHub pages is capped to on their browser/laptop).
-    const timeScale = (dt / 16.66) * 2.0; 
+    // Reduce multiplier from 2.0 to 1.2 to slow down the game
+    const timeScale = (dt / 16.66) * 1.2; 
 
     if (gameOver || gameWon) {
         if (!gameWon) {
