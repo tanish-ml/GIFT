@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOM Gravity Collapse</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+    body {
+      background: #000;
+      color: #00ff66;
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Grid Layout containing physics-driven DOM nodes */
+    .viewport {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 60px;
+      height: 100vh;
+      align-items: center;
+    }
+
+    .card {
+      background: rgba(0, 20, 8, 0.8);
+      border: 1px solid #00ff66;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
+      transition: border-color 0.2s;
+    }
+
+    .card h2 { font-size: 1.8rem; margin-bottom: 10px; color: #fff; }
+    .card p { font-size: 0.85rem; color: #00ff66; line-height: 1.4; }
+
+    /* Gravitational Singularity Cursor Marker */
+    .singularity {
+      position: fixed;
+      width: 30px;
+      height: 30px;
+      background: #fff;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 30px #00ff66, 0 0 60px #00ff66;
+    }
+
+    .status-hud {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10000;
+      pointer-events: none;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      background: rgba(0,0,0,0.9);
+      border: 1px solid #00ff66;
+      padding: 10px 16px;
+    }
+
+    /* Back to Showcase Button Styling */
+    .back-btn {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      color: #00ff66;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid #00ff66;
+      background: rgba(0, 10, 3, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      z-index: 10000;
+      text-transform: uppercase;
+      font-weight: bold;
+      cursor: pointer !important;
+    }
+    .back-btn:hover { 
+      background: #00ff66; 
+      color: #000;
+      box-shadow: 0 0 15px #00ff66;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="status-hud" id="hud">GRAVITY_FIELD: ACTIVE // MOVE CURSOR NEAR DOM NODES TO DISRUPT</div>
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+  <div class="singularity" id="cursor"></div>
+
+  <div class="viewport">
+    <div class="card physics-node">
+      <h2>SYS_CORE</h2>
+      <p>Primary telemetry and system diagnostic array running nominal protocols.</p>
+    </div>
+    <div class="card physics-node">
+      <h2>NET_MESH</h2>
+      <p>Distributed node connections maintaining low-latency quantum routing.</p>
+    </div>
+    <div class="card physics-node">
+      <h2>DATA_VAULT</h2>
+      <p>Encrypted memory registers stored across distributed redundant buffers.</p>
+    </div>
+    <div class="card physics-node">
+      <h2>SHADOW_PASS</h2>
+      <p>High-speed rendering pipelines configured for real-time raymarched visualizers.</p>
+    </div>
+    <div class="card physics-node">
+      <h2>WARP_ENGINE</h2>
+      <p>Spatial deformation grid engaged for non-Euclidean perspective warping.</p>
+    </div>
+    <div class="card physics-node">
+      <h2>SECURITY</h2>
+      <p>Active firewall threat detection scanning for real-time memory breaches.</p>
+    </div>
+  </div>
+
+  <script>
+    const cursor = document.getElementById('cursor');
+    const hud = document.getElementById('hud');
+    const rawNodes = document.querySelectorAll('.physics-node');
+
+    const mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      cursor.style.left = `${mouse.x}px`;
+      cursor.style.top = `${mouse.y}px`;
+    });
+
+    // Convert static layout DOM elements into physics objects
+    const nodes = Array.from(rawNodes).map((el) => {
+      const rect = el.getBoundingClientRect();
+      
+      // Detach element from CSS grid into absolute physics space
+      const node = {
+        el: el,
+        x: rect.left,
+        y: rect.top,
+        origX: rect.left,
+        origY: rect.top,
+        vx: 0,
+        vy: 0,
+        rot: 0,
+        vRot: 0,
+        width: rect.width,
+        height: rect.height
+      };
+
+      el.style.position = 'fixed';
+      el.style.left = '0px';
+      el.style.top = '0px';
+      el.style.width = `${rect.width}px`;
+
+      return node;
+    });
+
+    function physicsLoop() {
+      nodes.forEach((node) => {
+        const centerX = node.x + node.width / 2;
+        const centerY = node.y + node.height / 2;
+
+        const dx = mouse.x - centerX;
+        const dy = mouse.y - centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const gravRadius = 350;
+
+        if (dist < gravRadius) {
+          // Gravitational pull force calculation
+          const force = (1 - dist / gravRadius) * 2.5;
+          const angle = Math.atan2(dy, dx);
+
+          // Orbit rotational velocity + direct attraction
+          node.vx += Math.cos(angle + 0.8) * force * 1.5;
+          node.vy += Math.sin(angle + 0.8) * force * 1.5;
+
+          // Torque rotation based on offset hit
+          node.vRot += (Math.random() - 0.5) * force * 2;
+        }
+
+        // Spring force returning elements to layout home positions when mouse moves away
+        const homeDx = node.origX - node.x;
+        const homeDy = node.origY - node.y;
+
+        node.vx += homeDx * 0.02;
+        node.vy += homeDy * 0.02;
+
+        // Friction / Damping
+        node.vx *= 0.88;
+        node.vy *= 0.88;
+        node.vRot *= 0.85;
+
+        node.x += node.vx;
+        node.y += node.vy;
+        node.rot += node.vRot;
+
+        // Render physics transform on actual HTML elements
+        node.el.style.transform = `translate3d(${node.x}px, ${node.y}px, 0px) rotate(${node.rot}deg)`;
+      });
+
+      requestAnimationFrame(physicsLoop);
+    }
+
+    physicsLoop();
+  </script>
+</body>
+</html>

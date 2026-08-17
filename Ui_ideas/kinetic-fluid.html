@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kinetic Liquid ASCII Hero</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #00ff66;
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      pointer-events: none;
+      text-align: center;
+      text-shadow: 0 0 20px rgba(0, 255, 102, 0.8);
+    }
+
+    .hero-content h1 {
+      font-size: 6rem;
+      font-weight: 900;
+      letter-spacing: 12px;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .hero-content p {
+      font-size: 0.9rem;
+      letter-spacing: 4px;
+      color: #00ff66;
+    }
+
+    /* Back to Showcase Button Styling */
+    .back-btn {
+      position: fixed;
+      top: 2rem;
+      left: 2rem;
+      color: #00ff66;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid #00ff66;
+      background: rgba(0, 10, 3, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      z-index: 100;
+      text-transform: uppercase;
+      font-weight: bold;
+      cursor: pointer !important;
+    }
+    .back-btn:hover { 
+      background: #00ff66; 
+      color: #000;
+      box-shadow: 0 0 15px #00ff66;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="hero-content">
+    <h1>FLUID MATRIX</h1>
+    <p>[ DRAG CURSOR THROUGH FIELD TO AGITATE LIQUID ]</p>
+  </div>
+
+  <canvas id="fluidCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('fluidCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    const RAMP = ' .:-=+*#%@';
+    const gridSpacing = 16;
+    let cols = Math.floor(width / gridSpacing);
+    let rows = Math.floor(height / gridSpacing);
+
+    // Fluid grid nodes
+    let grid = [];
+
+    function initGrid() {
+      cols = Math.floor(width / gridSpacing);
+      rows = Math.floor(height / gridSpacing);
+      grid = [];
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          grid.push({
+            baseX: x * gridSpacing,
+            baseY: y * gridSpacing,
+            x: x * gridSpacing,
+            y: y * gridSpacing,
+            vx: 0,
+            vy: 0,
+            char: RAMP[Math.floor(Math.random() * RAMP.length)]
+          });
+        }
+      }
+    }
+
+    const mouse = { x: -1000, y: -1000, lx: -1000, ly: -1000, vx: 0, vy: 0 };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.vx = e.clientX - mouse.lx;
+      mouse.vy = e.clientY - mouse.ly;
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.lx = e.clientX;
+      mouse.ly = e.clientY;
+    });
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      initGrid();
+    });
+
+    function animate() {
+      // Trail effect
+      ctx.fillStyle = 'rgba(0, 5, 2, 0.3)';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.font = 'bold 12px monospace';
+      ctx.textBaseline = 'top';
+
+      for (let i = 0; i < grid.length; i++) {
+        const node = grid[i];
+
+        // Physics interaction with mouse wave
+        const dx = mouse.x - node.x;
+        const dy = mouse.y - node.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const maxDist = 120;
+
+        if (dist < maxDist) {
+          const force = (1 - dist / maxDist) * 8;
+          const angle = Math.atan2(dy, dx);
+          
+          // Transfer mouse velocity to fluid grid
+          node.vx -= Math.cos(angle) * force + mouse.vx * 0.1;
+          node.vy -= Math.sin(angle) * force + mouse.vy * 0.1;
+        }
+
+        // Elastic return spring force to original position
+        const homeDx = node.baseX - node.x;
+        const homeDy = node.baseY - node.y;
+
+        node.vx += homeDx * 0.04;
+        node.vy += homeDy * 0.04;
+
+        // Damping / Viscosity friction
+        node.vx *= 0.88;
+        node.vy *= 0.88;
+
+        node.x += node.vx;
+        node.y += node.vy;
+
+        // Calculate velocity magnitude to dynamically switch ASCII character density
+        const speed = Math.sqrt(node.vx * node.vx + node.vy * node.vy);
+        const charIdx = Math.min(RAMP.length - 1, Math.floor(speed * 1.5));
+        const char = RAMP[charIdx];
+
+        // Render color based on displacement energy
+        if (speed > 4) {
+          ctx.fillStyle = '#ffffff'; // Agitated liquid flare
+        } else if (speed > 1.5) {
+          ctx.fillStyle = '#00ff66'; // Glowing phosphor fluid
+        } else {
+          ctx.fillStyle = '#004411'; // Idle dark matrix
+        }
+
+        ctx.fillText(char, node.x, node.y);
+      }
+
+      // Decay mouse velocity
+      mouse.vx *= 0.9;
+      mouse.vy *= 0.9;
+
+      requestAnimationFrame(animate);
+    }
+
+    initGrid();
+    animate();
+  </script>
+</body>
+</html>

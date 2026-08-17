@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laser Scanner Hero</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #030704;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .hero-container {
+      position: relative;
+      width: 90vw;
+      height: 80vh;
+      border: 1px solid rgba(0, 255, 102, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+    }
+
+    /* Base Layer (Slick Dark Graphic) */
+    .base-layer {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #0a150d 0%, #000 80%);
+      z-index: 1;
+    }
+
+    .base-layer h1 {
+      font-size: 5rem;
+      font-family: sans-serif;
+      font-weight: 900;
+      letter-spacing: -2px;
+      color: #111;
+      text-shadow: 0 0 2px #222;
+      text-transform: uppercase;
+    }
+
+    /* ASCII Scan Layer (Masked reveal) */
+    .scan-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      /* Dynamic clip path controlled by JS */
+      clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Vertical Laser Beam Line */
+    .laser-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: #00ff66;
+      box-shadow: 0 0 15px #00ff66, 0 0 30px #00ff66;
+      z-index: 3;
+      pointer-events: none;
+      transform: translateX(-50%);
+    }
+
+    .hud-stats {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      font-size: 0.75rem;
+      color: #00ff66;
+      z-index: 10;
+      letter-spacing: 1px;
+    }
+
+    /* Back to Showcase Button Styling */
+    .back-btn {
+      position: fixed;
+      top: 2rem;
+      left: 2rem;
+      color: #00ff66;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid #00ff66;
+      background: rgba(0, 10, 3, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      z-index: 100;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+    .back-btn:hover { 
+      background: #00ff66; 
+      color: #000;
+      box-shadow: 0 0 15px #00ff66;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="hero-container" id="hero">
+    <!-- Base standard dark UI layer -->
+    <div class="base-layer">
+      <h1>CYBERNETIC</h1>
+    </div>
+
+    <!-- Hidden ASCII Cyber Layer revealed by laser -->
+    <div class="scan-layer" id="scanLayer">
+      <canvas id="asciiCanvas"></canvas>
+    </div>
+
+    <!-- The actual visible laser line -->
+    <div class="laser-line" id="laser"></div>
+
+    <div class="hud-stats" id="hud">SYSTEM READY // MOUSE SCAN ACTIVE</div>
+  </div>
+
+  <script>
+    const hero = document.getElementById('hero');
+    const scanLayer = document.getElementById('scanLayer');
+    const laser = document.getElementById('laser');
+    const canvas = document.getElementById('asciiCanvas');
+    const ctx = canvas.getContext('2d');
+    const hud = document.getElementById('hud');
+
+    let laserX = window.innerWidth * 0.4;
+    let targetX = laserX;
+    const RAMP = ' .:-=+*#%@';
+
+    function resize() {
+      canvas.width = hero.clientWidth;
+      canvas.height = hero.clientHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Mouse tracking
+    hero.addEventListener('mousemove', (e) => {
+      const rect = hero.getBoundingClientRect();
+      targetX = e.clientX - rect.left;
+    });
+
+    // Render ASCII dynamic pattern inside laser layer
+    let t = 0;
+    function drawAsciiLayer() {
+      t += 0.04;
+      ctx.fillStyle = '#000a03';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = 'bold 12px monospace';
+
+      const cols = Math.floor(canvas.width / 10);
+      const rows = Math.floor(canvas.height / 14);
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          // Generative procedural wave pattern
+          const dist = Math.sin(x * 0.05 + t) + Math.cos(y * 0.05 + t);
+          const bright = Math.floor((dist + 2) / 4 * 255);
+          
+          const charIdx = Math.floor((bright / 255) * (RAMP.length - 1));
+          const char = RAMP[charIdx];
+
+          if (bright > 180) {
+            ctx.fillStyle = '#ffffff';
+          } else {
+            ctx.fillStyle = '#00ff66';
+          }
+          ctx.fillText(char, x * 10, y * 14);
+        }
+      }
+    }
+
+    function animate() {
+      // Smooth lerp movement for laser line
+      laserX += (targetX - laserX) * 0.1;
+
+      laser.style.left = `${laserX}px`;
+
+      // Clip mask calculation (reveals a 120px window behind the laser beam)
+      const scanWidth = 120;
+      const leftBoundary = Math.max(0, laserX - scanWidth);
+      const rightBoundary = laserX;
+
+      scanLayer.style.clipPath = `polygon(
+        ${leftBoundary}px 0%, 
+        ${rightBoundary}px 0%, 
+        ${rightBoundary}px 100%, 
+        ${leftBoundary}px 100%
+      )`;
+
+      hud.innerText = `SCANNER_POS: [${Math.round(laserX)}PX] // STATUS: OPTICAL_FLUID_OK`;
+
+      drawAsciiLayer();
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

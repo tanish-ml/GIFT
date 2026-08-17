@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASCII Depth Chamber</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #020402;
+      color: #00ff66;
+      font-family: 'Courier New', Courier, monospace;
+      height: 1000vh; /* Scaled for 10 items */
+      overflow-x: hidden;
+    }
+    
+    /* Loading Screen */
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: #000a03;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #00ff66;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      transition: opacity 0.5s ease;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(0, 255, 102, 0.2);
+      border-top-color: #00ff66;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    .viewport {
+      position: fixed;
+      inset: 0;
+      perspective: 1000px;
+      overflow: hidden;
+      background: #000a03;
+    }
+
+    /* CRT Scanline Overlay */
+    .viewport::after {
+      content: " ";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.4) 50%
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .world {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      will-change: transform;
+      pointer-events: none; /* Hardware acceleration optimization */
+    }
+
+    .layer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      background: transparent;
+      border: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backface-visibility: hidden;
+      will-change: transform;
+      pointer-events: none; /* Stops scroll hit-testing lag */
+    }
+
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 2rem;
+      left: 2rem;
+      color: #00ff66;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid #00ff66;
+      background: rgba(0, 10, 3, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      z-index: 100;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+    .back-btn:hover { 
+      background: #00ff66; 
+      color: #000;
+      box-shadow: 0 0 15px #00ff66;
+    }
+
+    .scroll-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #00ff66;
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+      z-index: 100;
+      pointer-events: none;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loader">
+    <div class="spinner"></div>
+    <div id="loader-text">PROCESSING ASCII (0/10)</div>
+  </div>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+  <div class="scroll-hint">[ SCROLL DOWN TO FLY THROUGH CHAMBER ]</div>
+
+  <div class="viewport">
+    <div class="world" id="world"></div>
+  </div>
+
+  <script>
+    // Array of the 10 remaining photos
+    const mediaFiles = [
+      "photo/bhanu_girotra_20260814_125140_087.jpg",
+      "photo/bhanu_girotra_20260814_125143_671.jpg",
+      "photo/bhanu_girotra_20260814_125144_331.jpg",
+      "photo/bhanu_girotra_20260814_125200_950.jpg",
+      "photo/bhanu_girotra_20260814_125205_036.jpg",
+      "photo/bhanu_girotra_20260814_125205_615.jpg",
+      "photo/bhanu_girotra_20260814_125210_259.jpg",
+      "photo/bhanu_girotra_20260814_125214_352.jpg",
+      "photo/bhanu_girotra_20260814_125214_549.jpg",
+      "photo/bhanu_girotra_20260814_125342_738.jpg"
+    ];
+
+    const world = document.getElementById('world');
+    const loader = document.getElementById('loader');
+    const loaderText = document.getElementById('loader-text');
+    
+    const RAMP = ' `.-\':_,^=;><+!rc*/z?sLTv)J7(|Fi{C}fI31tlu[neoZ5Yxjya]2ESwqkP6h9d4VpOGbUAKXHm8RD#$Bg0MNWQ%&@';
+    const density = 140; 
+    const contrast = 1.3;
+    const totalItems = mediaFiles.length;
+    let itemsProcessed = 0;
+
+    mediaFiles.forEach((file, index) => {
+      const layerDiv = document.createElement('div');
+      layerDiv.className = 'layer';
+      
+      const spreadX = (index % 2 === 0 ? 1 : -1) * (180 + Math.random() * 150);
+      const spreadY = (index % 3 === 0 ? 1 : -1) * (100 + Math.random() * 100);
+      const zPos = index * -1400; // Space out along Z-axis
+      
+      layerDiv.style.transform = `translate3d(${spreadX}px, ${spreadY}px, ${zPos}px)`;
+      
+      const canvas = document.createElement('canvas');
+      layerDiv.appendChild(canvas);
+      world.appendChild(layerDiv);
+
+      const ctx = canvas.getContext('2d', { alpha: true });
+      const offCanvas = document.createElement('canvas');
+      const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+
+      const media = new Image();
+      media.crossOrigin = "anonymous";
+      
+      const layerObj = {
+        z: zPos,
+        div: layerDiv,
+        media,
+        canvas,
+        ctx,
+        offCanvas,
+        offCtx,
+        ready: false
+      };
+
+      const onReady = () => {
+        if (layerObj.ready) return;
+        layerObj.ready = true;
+
+        const w = media.width || 400;
+        const h = media.height || 500;
+        const aspect = h / w;
+        
+        const cardWidth = 600;
+        const cardHeight = Math.floor(cardWidth * aspect);
+        
+        layerDiv.style.width = `${cardWidth}px`;
+        layerDiv.style.height = `${cardHeight}px`;
+        layerDiv.style.marginLeft = `-${cardWidth / 2}px`;
+        layerDiv.style.marginTop = `-${cardHeight / 2}px`;
+
+        // Calculate and stamp ASCII directly on load
+        renderLayer(layerObj);
+        
+        // Update loading progress
+        itemsProcessed++;
+        loaderText.innerText = `PROCESSING ASCII (${itemsProcessed}/${totalItems})`;
+        
+        if (itemsProcessed === totalItems) {
+          setTimeout(() => {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.remove(), 500);
+          }, 300); // small grace period
+        }
+      };
+
+      media.onload = onReady;
+      media.onerror = () => {
+         // Fail-safe to ensure loader always completes even if future files are missing
+         itemsProcessed++;
+         if (itemsProcessed === totalItems) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.remove(), 500);
+         }
+      };
+      media.src = file;
+      if (media.complete) onReady(); 
+    });
+
+    function renderLayer(layer) {
+      const w = layer.media.width;
+      const h = layer.media.height;
+      if (!w || !h) return;
+
+      const aspect = h / w;
+      const cols = density;
+      const rows = Math.floor(cols * aspect * 0.55);
+
+      layer.offCanvas.width = cols;
+      layer.offCanvas.height = rows;
+
+      try {
+        layer.offCtx.drawImage(layer.media, 0, 0, cols, rows);
+      } catch(e) { return; }
+
+      const imgData = layer.offCtx.getImageData(0, 0, cols, rows).data;
+
+      const fontSize = layer.div.clientWidth / cols;
+      const charWidth = fontSize * 0.6;
+      const charHeight = fontSize;
+
+      layer.canvas.width = cols * charWidth;
+      layer.canvas.height = rows * charHeight;
+
+      layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+      layer.ctx.font = `bold ${fontSize}px 'Courier New', monospace`;
+      layer.ctx.textBaseline = 'top';
+
+      const colorBatches = { '#ffffff': [], '#00ff66': [], '#004411': [] };
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const i = (y * cols + x) * 4;
+          const r = imgData[i];
+          const g = imgData[i + 1];
+          const b = imgData[i + 2];
+
+          let luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b);
+          luminance = Math.min(255, Math.max(0, (luminance - 128) * contrast + 128));
+
+          const charIdx = Math.floor((luminance / 255) * (RAMP.length - 1));
+          const char = RAMP[charIdx];
+
+          let color;
+          if (luminance > 210) color = '#ffffff';
+          else if (luminance > 110) color = '#00ff66';
+          else color = '#004411';
+          
+          if (char !== ' ' && char !== '`') {
+             colorBatches[color].push({ char, x: x * charWidth, y: y * charHeight });
+          }
+        }
+      }
+
+      for (const color in colorBatches) {
+        if (colorBatches[color].length === 0) continue;
+        layer.ctx.fillStyle = color;
+        const batch = colorBatches[color];
+        for (let i = 0; i < batch.length; i++) {
+           layer.ctx.fillText(batch[i].char, batch[i].x, batch[i].y);
+        }
+      }
+
+      // Bake a soft "squarcle" (rounded rectangle) fade into the canvas natively.
+      // This avoids the oval look while keeping the edges smoothly blurred.
+      layer.ctx.globalCompositeOperation = 'destination-in';
+      layer.ctx.filter = 'blur(12px)'; // Creates the soft edge feathering
+      layer.ctx.fillStyle = 'black'; 
+      
+      layer.ctx.beginPath();
+      // Inset the rectangle slightly so the blur has room to fade out before hitting the hard canvas boundary
+      const inset = 15;
+      const radius = 25;
+      layer.ctx.roundRect(
+         inset, 
+         inset, 
+         layer.canvas.width - (inset * 2), 
+         layer.canvas.height - (inset * 2), 
+         radius
+      );
+      layer.ctx.fill();
+      
+      // Clean up context state
+      layer.ctx.filter = 'none';
+      layer.ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // Scroll Depth Camera Logic (Extremely lightweight now)
+    let targetZ = 0;
+    let currentZ = 0;
+
+    window.addEventListener('scroll', () => {
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      const progress = window.scrollY / maxScroll;
+      targetZ = progress * 13500; // Matches total Z distance for 10 items
+    });
+
+    function animate() {
+      // Only processing simple 3D translation - No canvas drawing!
+      currentZ += (targetZ - currentZ) * 0.08;
+      world.style.transform = `translateZ(${currentZ}px)`;
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

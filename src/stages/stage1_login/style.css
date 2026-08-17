@@ -1,0 +1,189 @@
+/* src/stages/stage1_login/style.css */
+.stage1-container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 50px;
+    background-color: #050505;
+    color: #0f0;
+    font-family: 'Courier New', Courier, monospace;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.login-form, .password-game {
+    width: 90%;
+    max-width: 600px;
+    background: #111;
+    border: 1px solid #0f0;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+    margin-bottom: 50px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #0f0;
+    padding-bottom: 10px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.input-group input {
+    background: #000;
+    border: 1px solid #0f0;
+    color: #0f0;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 16px;
+    outline: none;
+    transition: box-shadow 0.2s;
+}
+
+.input-group input:focus {
+    box-shadow: 0 0 8px #0f0;
+}
+
+.error-text {
+    color: #ff3333;
+    font-size: 12px;
+    margin-top: 5px;
+    min-height: 15px;
+}
+
+.shake {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+.btn-submit {
+    background: #000;
+    color: #0f0;
+    border: 1px solid #0f0;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 16px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-submit:hover {
+    background: #0f0;
+    color: #000;
+}
+
+/* Password Game specifics */
+.password-game input {
+    font-size: 20px;
+    letter-spacing: 1px;
+}
+
+.password-game .char-count {
+    text-align: right;
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+}
+
+.rules-container {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column; 
+}
+
+.rule-box {
+    border: 1px solid #444;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    background: #0a0a0a;
+}
+
+.rule-box.pass {
+    border-color: #0f0;
+    background: rgba(0, 255, 0, 0.05);
+}
+
+.rule-box.fail {
+    border-color: #ff3333;
+    background: rgba(255, 0, 0, 0.05);
+    color: #ff6666;
+}
+
+.rule-header {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.rule-text {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+}
+
+.shake {
+    animation: shake 0.4s ease-in-out;
+}
+
+/* Unlock animation */
+.unlock-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #0f0;
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: bold;
+    z-index: 1000;
+    animation: flash 1s forwards;
+}
+
+@keyframes flash {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; display: none; }
+}

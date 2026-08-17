@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Escape Room</title>
+    <style>
+      .crt-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          pointer-events: none;
+          z-index: 999999;
+          background: 
+              linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.1), rgba(0, 255, 0, 0.05), rgba(0, 0, 255, 0.1));
+          background-size: 100% 3px, 3px 100%;
+          backdrop-filter: contrast(1.1) brightness(1.02);
+      }
+      .crt-vignette {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          pointer-events: none;
+          z-index: 999998;
+          background: radial-gradient(circle, rgba(0,0,0,0) 70%, rgba(0,0,0,0.4) 100%);
+          animation: crtFlicker 0.15s infinite;
+      }
+      @keyframes crtFlicker {
+          0% { opacity: 0.95; }
+          50% { opacity: 1.0; }
+          100% { opacity: 0.98; }
+      }
+      .crt-roll {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 12vh;
+          pointer-events: none;
+          z-index: 999997;
+          background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(255,255,255,0.05) 35%, rgba(0,0,0,0.15) 50%, rgba(255,255,255,0.05) 65%, rgba(0,0,0,0) 100%);
+          animation: crtRoll 8s linear infinite;
+          -webkit-backdrop-filter: brightness(1.1) contrast(1.05) hue-rotate(1deg);
+          backdrop-filter: brightness(1.1) contrast(1.05) hue-rotate(1deg);
+      }
+      @keyframes crtRoll {
+          0% { transform: translateY(-10vh); }
+          100% { transform: translateY(110vh); }
+      }
+      
+      .crt-static-pulse {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          pointer-events: none;
+          z-index: 999998;
+          background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)"/></svg>');
+          opacity: 0;
+          mix-blend-mode: screen;
+          transition: opacity 0.05s;
+      }
+      .crt-static-pulse.pulse-active {
+          opacity: 0.35;
+      }
+    </style>
+    <link rel="stylesheet" href="/src/styles/main.css?v=128">
+    <link rel="stylesheet" href="/src/stages/stage1_login/style.css?v=126">
+    <link rel="stylesheet" href="/src/stages/stage2_maze/style.css?v=126">
+    <link rel="stylesheet" href="/src/stages/stage3_flappy/style.css?v=126">
+    <link rel="stylesheet" href="/src/stages/stage4_twist/style.css?v=126">
+    <link rel="stylesheet" href="/src/stages/stage5_world/style.css?v=126">
+    <link rel="stylesheet" href="/src/stages/stage6_devil/style.css?v=126">
+    <link rel="stylesheet" href="/src/stages/stage7_gift/style.css?v=126">
+  </head>
+  <body>
+    <div id="app"></div>
+    <div class="crt-overlay"></div>
+    <div class="crt-vignette"></div>
+    <div class="crt-roll"></div>
+    <div class="crt-static-pulse"></div>
+    
+    <script>
+      function triggerStaticPulse() {
+          const pulse = document.querySelector('.crt-static-pulse');
+          if (pulse) {
+              pulse.classList.add('pulse-active');
+              setTimeout(() => pulse.classList.remove('pulse-active'), 50);
+              setTimeout(() => pulse.classList.add('pulse-active'), 100);
+              setTimeout(() => pulse.classList.remove('pulse-active'), 200);
+          }
+          const nextTime = Math.random() * 10000 + 10000;
+          setTimeout(triggerStaticPulse, nextTime);
+      }
+      setTimeout(triggerStaticPulse, 10000);
+    </script>
+    <script type="module" src="/src/main.js?v=133"></script>
+  </body>
+</html>
+

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liquid Gooey Blob Merger</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #050508;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    
+    /* The SVG Filter container that turns blurred shapes into gooey liquids */
+    .goo-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      filter: url('#goo');
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .main-blob {
+      width: 180px;
+      height: 180px;
+      background: linear-gradient(45deg, #ff0055, #7a00ff);
+      border-radius: 50%;
+      position: absolute;
+    }
+
+    .tracker-blob {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(45deg, #ff0055, #7a00ff);
+      border-radius: 50%;
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .overlay-text {
+      position: absolute;
+      color: #fff;
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      pointer-events: none;
+      z-index: 10;
+    }
+    
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: #fff;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      z-index: 100;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="overlay-text">MERCURY UI</div>
+
+  <div class="goo-container">
+    <div class="main-blob"></div>
+    <div class="tracker-blob" id="tracker"></div>
+  </div>
+
+  <!-- Hidden SVG Filter definition -->
+  <svg style="display: none;">
+    <defs>
+      <filter id="goo">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur" />
+        <feColorMatrix in="blur" mode="matrix" values="
+          1 0 0 0 0
+          0 1 0 0 0
+          0 0 1 0 0
+          0 0 0 25 -9" result="goo" />
+        <feBlend in="SourceGraphic" in2="goo" />
+      </filter>
+    </defs>
+  </svg>
+
+  <script>
+    const tracker = document.getElementById('tracker');
+    let tx = window.innerWidth / 2;
+    let ty = window.innerHeight / 2;
+    let mx = tx, my = ty;
+
+    window.addEventListener('mousemove', (e) => {
+      mx = e.clientX;
+      my = e.clientY;
+    });
+
+    function animate() {
+      // Lerp for fluid liquid lag
+      tx += (mx - tx) * 0.08;
+      ty += (my - ty) * 0.08;
+
+      tracker.style.transform = `translate(${tx - window.innerWidth / 2}px, ${ty - window.innerHeight / 2}px)`;
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>

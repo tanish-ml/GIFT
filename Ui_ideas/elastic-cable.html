@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elastic Cable Pull</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #08090d;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: system-ui, sans-serif;
+    }
+
+    svg {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+    }
+
+    .info {
+      position: absolute;
+      bottom: 40px;
+      color: #777;
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+      pointer-events: none;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: #fff;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      z-index: 1000;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <svg>
+    <path id="cable" fill="none" stroke="#ff0055" stroke-width="6" />
+  </svg>
+
+  <div class="info">CLICK & DRAG CABLE TO SNAP</div>
+
+  <script>
+    const cable = document.getElementById('cable');
+    
+    // Fixed anchor points
+    const p0 = { x: 100, y: window.innerHeight / 2 };
+    const p2 = { x: window.innerWidth - 100, y: window.innerHeight / 2 };
+
+    // Dynamic control point
+    const p1 = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    const target = { x: p1.x, y: p1.y };
+    const velocity = { x: 0, y: 0 };
+
+    let isDragging = false;
+
+    window.addEventListener('mousedown', (e) => {
+      // Check distance to control point
+      const dist = Math.hypot(e.clientX - p1.x, e.clientY - p1.y);
+      if (dist < 150) {
+        isDragging = true;
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        target.x = e.clientX;
+        target.y = e.clientY;
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      // Reset target to equilibrium center
+      target.x = window.innerWidth / 2;
+      target.y = window.innerHeight / 2;
+    });
+
+    function animate() {
+      if (isDragging) {
+        p1.x = target.x;
+        p1.y = target.y;
+      } else {
+        // Spring stiffness and damping calculation
+        const k = 0.08; // Stiffness
+        const damping = 0.82; // Friction
+
+        const fx = (target.x - p1.x) * k;
+        const fy = (target.y - p1.y) * k;
+
+        velocity.x = (velocity.x + fx) * damping;
+        velocity.y = (velocity.y + fy) * damping;
+
+        p1.x += velocity.x;
+        p1.y += velocity.y;
+      }
+
+      // Draw quadratic bezier curve
+      const d = `M ${p0.x},${p0.y} Q ${p1.x},${p1.y} ${p2.x},${p2.y}`;
+      cable.setAttribute('d', d);
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>

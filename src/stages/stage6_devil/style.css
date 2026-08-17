@@ -1,0 +1,91 @@
+.stage6-devil-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background-color: #050505;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    color: #0f0;
+    font-family: monospace;
+}
+
+#devil-canvas {
+    background: #111;
+    border: 2px solid #0f0;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+    image-rendering: pixelated;
+    transition: transform 0.3s ease;
+}
+
+.devil-hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.devil-stat {
+    font-size: 24px;
+    text-shadow: 0 0 10px #0f0;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 15px;
+    border-radius: 5px;
+    border: 1px solid #0f0;
+}
+
+.devil-btn-skip {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    color: #f00;
+    border: 1px solid #f00;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-family: monospace;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s;
+    text-shadow: 0 0 5px #f00;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+}
+
+.devil-btn-skip:hover {
+    background: rgba(255, 0, 0, 0.2);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+}
+
+.devil-glitch-banner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    color: #f0f;
+    text-shadow: 0 0 20px #f0f;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+    font-weight: bold;
+    text-align: center;
+}
+
+.devil-glitch-active {
+    animation: devilGlitchAnim 2s forwards;
+}
+
+@keyframes devilGlitchAnim {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    10% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    15% { opacity: 0; transform: translate(-48%, -52%) scale(1.1); }
+    20% { opacity: 1; transform: translate(-52%, -48%) scale(1.0); }
+    30% { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+}

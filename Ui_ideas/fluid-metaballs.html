@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fluid ASCII Metaballs</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+    body {
+      background: #010402;
+      color: #00ff66;
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .hero-title {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .hero-title h1 {
+      font-size: 5rem;
+      font-weight: 900;
+      letter-spacing: 16px;
+      color: #fff;
+      text-shadow: 0 0 20px #00ff66;
+    }
+
+    .hero-title p {
+      font-size: 0.9rem;
+      letter-spacing: 4px;
+      color: #00ff66;
+      margin-top: 10px;
+    }
+
+    /* Back to Showcase Button Styling */
+    .back-btn {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      color: #00ff66;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid #00ff66;
+      background: rgba(0, 10, 3, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      z-index: 100;
+      text-transform: uppercase;
+      font-weight: bold;
+      cursor: pointer !important;
+    }
+    .back-btn:hover { 
+      background: #00ff66; 
+      color: #000;
+      box-shadow: 0 0 15px #00ff66;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="hero-title">
+    <h1>HYPER_FLUID</h1>
+    <p>[ DRAG CURSOR TO CUT THROUGH LIQUID MATRIX ]</p>
+  </div>
+
+  <canvas id="fluidCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('fluidCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    const RAMP = ' .:-=+*#%@';
+
+    // Fluid Metaball particles
+    const blobs = [];
+    const numBlobs = 8;
+
+    for (let i = 0; i < numBlobs; i++) {
+      blobs.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 4,
+        vy: (Math.random() - 0.5) * 4,
+        radius: 80 + Math.random() * 60
+      });
+    }
+
+    const mouse = { x: -1000, y: -1000 };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    function render() {
+      ctx.fillStyle = '#010402';
+      ctx.fillRect(0, 0, width, height);
+
+      // Update fluid metaball physics
+      blobs.forEach((b) => {
+        b.x += b.vx;
+        b.y += b.vy;
+
+        // Bounce off screen borders
+        if (b.x < 0 || b.x > width) b.vx *= -1;
+        if (b.y < 0 || b.y > height) b.vy *= -1;
+
+        // Repelled by cursor like hydrophobic fluid
+        const dx = b.x - mouse.x;
+        const dy = b.y - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 180) {
+          const force = (1 - dist / 180) * 8;
+          const angle = Math.atan2(dy, dx);
+          b.vx += Math.cos(angle) * force;
+          b.vy += Math.sin(angle) * force;
+        }
+
+        // Speed cap / viscosity drag
+        b.vx *= 0.98;
+        b.vy *= 0.98;
+      });
+
+      // Render ASCII Iso-surface field
+      const charSize = 14;
+      const cols = Math.ceil(width / charSize);
+      const rows = Math.ceil(height / charSize);
+
+      ctx.font = 'bold 12px monospace';
+      ctx.textBaseline = 'top';
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const px = x * charSize;
+          const py = y * charSize;
+
+          // Metaball scalar field equation: SUM( R^2 / ( (x-x0)^2 + (y-y0)^2 ) )
+          let sum = 0;
+
+          for (let i = 0; i < blobs.length; i++) {
+            const b = blobs[i];
+            const dx = px - b.x;
+            const dy = py - b.y;
+            const distSq = dx * dx + dy * dy;
+
+            if (distSq > 0) {
+              sum += (b.radius * b.radius) / distSq;
+            }
+          }
+
+          // Render character based on fluid density field threshold
+          if (sum > 0.8) {
+            const density = Math.min(1, (sum - 0.8) / 2);
+            const charIdx = Math.floor(density * (RAMP.length - 1));
+            const char = RAMP[charIdx];
+
+            if (sum > 2.2) {
+              ctx.fillStyle = '#ffffff'; // Fluid core highlight
+            } else if (sum > 1.2) {
+              ctx.fillStyle = '#00ff66'; // Glowing liquid body
+            } else {
+              ctx.fillStyle = '#005522'; // Surface tension edge
+            }
+
+            ctx.fillText(char, px, py);
+          }
+        }
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    render();
+  </script>
+</body>
+</html>

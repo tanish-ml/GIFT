@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matrix Glitch Portal Hero</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #00ff66;
+      font-family: 'Courier New', monospace;
+      height: 600vh; /* Scroll space for depth travel */
+      overflow-x: hidden;
+    }
+
+    .portal-viewport {
+      position: fixed;
+      inset: 0;
+      perspective: 800px;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #001205 0%, #000 90%);
+    }
+
+    /* Dynamic Glitch / Chromatic Aberration Container */
+    .world-chamber {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    .portal-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 500px;
+      height: 500px;
+      margin-left: -250px;
+      margin-top: -250px;
+      border: 2px dashed #00ff66;
+      border-radius: 50%;
+      box-shadow: 0 0 20px #00ff66, inset 0 0 20px #00ff66;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backface-visibility: hidden;
+    }
+
+    .ring-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      text-shadow: 0 0 10px #00ff66;
+      background: rgba(0, 20, 5, 0.8);
+      padding: 10px 20px;
+      border: 1px solid #00ff66;
+    }
+
+    /* Motion Blur Speed Lines Overlay */
+    canvas#warpCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+      mix-blend-mode: screen;
+    }
+
+    .hud-header {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 30;
+      font-size: 0.8rem;
+      color: #00ff66;
+      border-left: 3px solid #00ff66;
+      padding-left: 10px;
+    }
+
+    /* Back to Showcase Button Styling */
+    .back-btn {
+      position: fixed;
+      top: 2rem;
+      right: 2rem; /* Placing on the right to avoid overlapping with top-left HUD */
+      color: #00ff66;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid #00ff66;
+      background: rgba(0, 10, 3, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      z-index: 100;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+    .back-btn:hover { 
+      background: #00ff66; 
+      color: #000;
+      box-shadow: 0 0 15px #00ff66;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="hud-header" id="hud">WARP_FACTOR: 0.00 // VELOCITY: IDLE</div>
+
+  <div class="portal-viewport">
+    <div class="world-chamber" id="chamber"></div>
+  </div>
+
+  <canvas id="warpCanvas"></canvas>
+
+  <script>
+    const chamber = document.getElementById('chamber');
+    const warpCanvas = document.getElementById('warpCanvas');
+    const warpCtx = warpCanvas.getContext('2d');
+    const hud = document.getElementById('hud');
+
+    let width = warpCanvas.width = window.innerWidth;
+    let height = warpCanvas.height = window.innerHeight;
+
+    const ringTitles = [
+      "SYSTEM OVERRIDE",
+      "QUANTUM DATA",
+      "NEURAL LINK",
+      "SYNTHESIS",
+      "CORE ACCESS",
+      "CYBERNETICS",
+      "TERMINAL READY"
+    ];
+
+    const rings = [];
+    const totalRings = ringTitles.length;
+
+    // Create 3D Rings positioned along the Z axis
+    ringTitles.forEach((title, index) => {
+      const ring = document.createElement('div');
+      ring.className = 'portal-ring';
+      
+      const zPos = index * -1200;
+      ring.style.transform = `translateZ(${zPos}px) rotate(${index * 15}deg)`;
+
+      const titleEl = document.createElement('div');
+      titleEl.className = 'ring-title';
+      titleEl.innerText = title;
+      
+      ring.appendChild(titleEl);
+      chamber.appendChild(ring);
+
+      rings.push({ element: ring, z: zPos });
+    });
+
+    // Velocity and scroll physics
+    let targetZ = 0;
+    let currentZ = 0;
+    let lastScrollY = window.scrollY;
+    let velocity = 0;
+
+    window.addEventListener('resize', () => {
+      width = warpCanvas.width = window.innerWidth;
+      height = warpCanvas.height = window.innerHeight;
+    });
+
+    window.addEventListener('scroll', () => {
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      const progress = window.scrollY / maxScroll;
+      targetZ = progress * (totalRings * 1200);
+
+      // Calculate instant scroll velocity
+      velocity = Math.abs(window.scrollY - lastScrollY);
+      lastScrollY = window.scrollY;
+    });
+
+    // Speed warp streak particles
+    const streaks = Array.from({ length: 100 }, () => ({
+      x: (Math.random() - 0.5) * width,
+      y: (Math.random() - 0.5) * height,
+      z: Math.random() * 1000,
+      len: Math.random() * 20 + 5
+    }));
+
+    function drawWarpLines() {
+      warpCtx.clearRect(0, 0, width, height);
+
+      // Render dynamic speed streaks based on scroll velocity
+      if (velocity > 1) {
+        warpCtx.strokeStyle = `rgba(0, 255, 102, ${Math.min(1, velocity / 50)})`;
+        warpCtx.lineWidth = Math.min(4, velocity / 15);
+
+        const cx = width / 2;
+        const cy = height / 2;
+
+        streaks.forEach(s => {
+          const angle = Math.atan2(s.y, s.x);
+          const dist = Math.sqrt(s.x * s.x + s.y * s.y);
+          const streakLength = dist * (velocity * 0.02);
+
+          const x1 = cx + Math.cos(angle) * dist;
+          const y1 = cy + Math.sin(angle) * dist;
+          const x2 = cx + Math.cos(angle) * (dist + streakLength);
+          const y2 = cy + Math.sin(angle) * (dist + streakLength);
+
+          warpCtx.beginPath();
+          warpCtx.moveTo(x1, y1);
+          warpCtx.lineTo(x2, y2);
+          warpCtx.stroke();
+        });
+      }
+    }
+
+    function animate() {
+      // Lerp camera position smooth motion
+      currentZ += (targetZ - currentZ) * 0.08;
+      velocity *= 0.92; // Friction decay for velocity
+
+      chamber.style.transform = `translateZ(${currentZ}px)`;
+
+      // Chromatic Glitch effect on high acceleration
+      if (velocity > 15) {
+        const rgbOffset = Math.min(20, velocity * 0.3);
+        chamber.style.filter = `drop-shadow(${rgbOffset}px 0 0 rgba(255,0,80,0.8)) drop-shadow(-${rgbOffset}px 0 0 rgba(0,255,255,0.8))`;
+      } else {
+        chamber.style.filter = 'none';
+      }
+
+      hud.innerText = `WARP_FACTOR: ${(velocity / 10).toFixed(2)} // CAMERA_Z: ${Math.round(currentZ)}px`;
+
+      drawWarpLines();
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

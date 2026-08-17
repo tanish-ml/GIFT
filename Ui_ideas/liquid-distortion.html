@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liquid Perspective Grid</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #08080a;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: system-ui, sans-serif;
+      perspective: 1500px;
+    }
+    .grid {
+      display: flex;
+      gap: 40px;
+    }
+    .card {
+      position: relative;
+      width: 300px;
+      height: 420px;
+      border-radius: 20px;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform 0.1s; /* JS handles smooth easing */
+    }
+    
+    .card-bg-wrapper {
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      overflow: hidden;
+      transform: translateZ(0); /* Base layer */
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+    }
+
+    .card-bg {
+      position: absolute;
+      inset: -15%;
+      background-size: cover;
+      background-position: center;
+      transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+    }
+    .card:nth-child(1) .card-bg { background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop'); }
+    .card:nth-child(2) .card-bg { background-image: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800&auto=format&fit=crop'); }
+    
+    .card-content {
+      position: absolute;
+      inset: 0;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+      border-radius: 20px;
+      color: #fff;
+      transform: translateZ(80px); /* Popped out */
+      pointer-events: none;
+      transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+    }
+    
+    .card-content h3 {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin-bottom: 5px;
+      transform: translateZ(40px);
+    }
+    .card-content p {
+      color: #00ffcc;
+      font-weight: 700;
+      letter-spacing: 1px;
+      transform: translateZ(20px);
+    }
+
+    /* Hover state enhancements */
+    .card:hover .card-bg {
+      transform: scale(1.1);
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: #fff;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      z-index: 100;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-bg-wrapper">
+        <div class="card-bg"></div>
+      </div>
+      <div class="card-content">
+        <h3>ARCHITECT</h3>
+        <p>01 / CONCEPT</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-bg-wrapper">
+        <div class="card-bg"></div>
+      </div>
+      <div class="card-content">
+        <h3>SPECTRUM</h3>
+        <p>02 / VISUAL</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cards = document.querySelectorAll('.card');
+
+    cards.forEach(card => {
+      let mouseX = 0;
+      let mouseY = 0;
+      let targetX = 0;
+      let targetY = 0;
+
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Calculate rotation angles (-20 to 20 degrees)
+        targetX = ((y / rect.height) - 0.5) * -40;
+        targetY = ((x / rect.width) - 0.5) * 40;
+      });
+
+      card.addEventListener('mouseleave', () => {
+        targetX = 0;
+        targetY = 0;
+      });
+
+      // Smooth interpolation
+      function update() {
+        mouseX += (targetX - mouseX) * 0.1;
+        mouseY += (targetY - mouseY) * 0.1;
+
+        card.style.transform = `rotateX(${mouseX}deg) rotateY(${mouseY}deg)`;
+        requestAnimationFrame(update);
+      }
+      update();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Next-Gen Manhwa 3D Depth Chamber</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      cursor: default;
+    }
+
+    body {
+      background: #020403;
+      color: #00ff66;
+      font-family: 'Courier New', Courier, monospace;
+      height: 600vh; /* Smooth scroll track */
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    /* Fixed Viewport Container for 3D Perspective Projection */
+    .chamber-viewport {
+      position: fixed;
+      inset: 0;
+      perspective: 1000px;
+      perspective-origin: 50% 50%;
+      overflow: hidden;
+    }
+
+    /* World Stage transformed by Scroll Camera */
+    .world-stage {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    /* Ambient Background Grid */
+    .grid-bg {
+      position: fixed;
+      inset: -50%;
+      background-image: 
+        linear-gradient(rgba(0, 255, 102, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 102, 0.08) 1px, transparent 1px);
+      background-size: 80px 80px;
+      pointer-events: none;
+      transform: translateZ(-2500px);
+    }
+
+    /* Scanlines Overlay */
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.75) 50%);
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 900;
+    }
+
+    /* HUD Interface Overlays */
+    .hud-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 800;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 30px;
+    }
+
+    .hud-title h1 {
+      font-size: 1.8rem;
+      letter-spacing: 4px;
+      color: #fff;
+      text-shadow: 0 0 12px #00ff66;
+    }
+
+    .hud-title p {
+      font-size: 0.75rem;
+      color: #00ff66;
+      letter-spacing: 2px;
+      margin-top: 4px;
+    }
+
+    .hud-telemetry {
+      font-size: 0.75rem;
+      color: #00ff66;
+      background: rgba(0, 10, 5, 0.85);
+      border: 1px solid #00ff66;
+      padding: 10px 16px;
+      width: fit-content;
+      box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+    }
+
+    /* Depth Chamber Panel Nodes */
+    .chamber-node {
+      position: absolute;
+      width: 340px;
+      height: 220px;
+      left: 50%;
+      top: 50%;
+      margin-left: -170px;
+      margin-top: -110px;
+      background: rgba(0, 15, 8, 0.9);
+      border: 1px solid #00ff66;
+      border-radius: 6px;
+      padding: 20px;
+      transform-style: preserve-3d;
+      box-shadow: 0 0 20px rgba(0, 255, 102, 0.15);
+      transition: border-color 0.3s, box-shadow 0.3s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .chamber-node:hover {
+      border-color: #ff0055;
+      box-shadow: 0 0 30px rgba(255, 0, 85, 0.5);
+    }
+
+    .node-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(0, 255, 102, 0.3);
+      padding-bottom: 8px;
+    }
+
+    .node-title {
+      font-size: 0.9rem;
+      color: #fff;
+      letter-spacing: 2px;
+      font-weight: bold;
+    }
+
+    .node-tag {
+      font-size: 0.65rem;
+      color: #00ff66;
+      background: rgba(0, 255, 102, 0.1);
+      padding: 2px 6px;
+      border-radius: 2px;
+    }
+
+    .node-body {
+      font-size: 0.75rem;
+      color: #a0ffa0;
+      line-height: 1.4;
+      margin-top: 10px;
+    }
+
+    .node-footer {
+      font-size: 0.65rem;
+      color: #00aa44;
+      letter-spacing: 1px;
+      text-align: right;
+    }
+
+    /* Back Button Styling */
+    .back-btn {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      color: #00ff66;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid #00ff66;
+      background: rgba(0, 10, 3, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      z-index: 10000;
+      text-transform: uppercase;
+      font-weight: bold;
+      cursor: pointer !important;
+    }
+    .back-btn:hover { 
+      background: #00ff66; 
+      color: #000;
+      box-shadow: 0 0 15px #00ff66;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scanlines"></div>
+  <div class="grid-bg"></div>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <!-- HUD Interface -->
+  <div class="hud-layer">
+    <div class="hud-title">
+      <h1>DEPTH_CHAMBER // S-PATH</h1>
+      <p>[ SCROLL TO NAVIGATE SINUSOIDAL 3D CHAMBER ]</p>
+    </div>
+    <div class="hud-telemetry" id="telemetry">
+      CAM_X: 0px | CAM_Z: 0px | PROGRESS: 0.00
+    </div>
+  </div>
+
+  <!-- 3D Viewport Engine -->
+  <div class="chamber-viewport">
+    <div class="world-stage" id="stage"></div>
+  </div>
+
+  <script>
+    const stage = document.getElementById('stage');
+    const telemetry = document.getElementById('telemetry');
+
+    const totalNodes = 20;
+    const nodesData = [];
+
+    // Curve Parameters
+    const zSpacing = 600;       // Z-distance spacing between elements
+    const xAmplitude = 550;     // S-curve width sweep (left to right)
+    const totalSLoops = 3;      // Number of full left-right S-curve loops
+
+    // Generate 20 Elements positioned ON the S-Curve trajectory
+    for (let i = 0; i < totalNodes; i++) {
+      const nodeEl = document.createElement('div');
+      nodeEl.className = 'chamber-node';
+
+      const progress = i / (totalNodes - 1);
+      const angle = progress * Math.PI * 2 * totalSLoops;
+      
+      // Calculate X coordinate directly on the Sine curve
+      const x = Math.sin(angle) * xAmplitude;
+      const y = 0; // Lock Y to 0 so elements don't appear from bottom/top
+      const z = -i * zSpacing;
+
+      nodeEl.innerHTML = `
+        <div class="node-header">
+          <span class="node-title">PANEL_0${i + 1}</span>
+          <span class="node-tag">S_CURVE_NODE</span>
+        </div>
+        <div class="node-body">
+          Sequential manhwa panel memory index initialized at layer depth coordinates.
+        </div>
+        <div class="node-footer">
+          X:${Math.round(x)} Y:${Math.round(y)} Z:${Math.round(z)}
+        </div>
+      `;
+
+      stage.appendChild(nodeEl);
+
+      nodesData.push({
+        el: nodeEl,
+        x: x,
+        y: y,
+        z: z
+      });
+    }
+
+    let currentScroll = 0;
+    let targetScroll = 0;
+
+    window.addEventListener('scroll', () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      targetScroll = Math.max(0, Math.min(1, window.scrollY / maxScroll));
+    });
+
+    function renderLoop() {
+      // Smooth Inertia (Lerp)
+      currentScroll += (targetScroll - currentScroll) * 0.08;
+
+      // Track exact position along the S-curve
+      const camAngle = currentScroll * Math.PI * 2 * totalSLoops;
+      const totalDepth = (totalNodes - 1) * zSpacing;
+
+      // Camera inverse offset locks the focused element directly in screen-center
+      const camX = -Math.sin(camAngle) * xAmplitude;
+      const camZ = currentScroll * totalDepth;
+
+      // Translate stage: Camera travels down Z and sweeps along the S-Curve X-axis
+      stage.style.transform = `translate3d(${camX}px, 0px, ${camZ}px)`;
+
+      // Render individual nodes & handle smooth depth attenuation
+      nodesData.forEach((node) => {
+        const relativeZ = node.z + camZ;
+        
+        node.el.style.transform = `translate3d(${node.x}px, ${node.y}px, ${node.z}px)`;
+
+        // Opacity mapping: elements fade in as they approach and fade out as they pass
+        let opacity = 1;
+        if (relativeZ > 100) {
+          opacity = 1 - (relativeZ - 100) / 350; // Fade out as element passes camera
+        } else if (relativeZ < -2000) {
+          opacity = (relativeZ + 3500) / 1500; // Fade out far elements in depth
+        }
+        
+        node.el.style.opacity = Math.max(0, Math.min(1, opacity));
+      });
+
+      telemetry.innerText = `CAM_X: ${Math.round(-camX)}px | CAM_Z: ${Math.round(camZ)}px | PROGRESS: ${currentScroll.toFixed(2)}`;
+
+      requestAnimationFrame(renderLoop);
+    }
+
+    renderLoop();
+  </script>
+</body>
+</html>

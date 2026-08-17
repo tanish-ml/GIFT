@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Particle Repulsion Field</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #06060a; overflow: hidden; height: 100vh; }
+    canvas { display: block; }
+    .hero-title {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #ffffff;
+      font-family: sans-serif;
+      font-size: 4vw;
+      font-weight: 900;
+      pointer-events: none;
+      text-transform: uppercase;
+      letter-spacing: 6px;
+      mix-blend-mode: difference;
+    }
+    
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: #fff;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      z-index: 100;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="hero-title">FORCE FIELD</div>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    const mouse = { x: -1000, y: -1000, radius: 150 };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    class Particle {
+      constructor(x, y) {
+        this.originX = x;
+        this.originY = y;
+        this.x = x;
+        this.y = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.size = Math.random() * 2 + 1;
+      }
+
+      update() {
+        // Calculate distance to mouse
+        const dx = mouse.x - this.x;
+        const dy = mouse.y - this.y;
+        const dist = Math.hypot(dx, dy);
+
+        // Repulsion force
+        if (dist < mouse.radius) {
+          const angle = Math.atan2(dy, dx);
+          const force = (mouse.radius - dist) / mouse.radius;
+          this.vx -= Math.cos(angle) * force * 5;
+          this.vy -= Math.sin(angle) * force * 5;
+        }
+
+        // Spring back to origin
+        this.vx += (this.originX - this.x) * 0.05;
+        this.vy += (this.originY - this.y) * 0.05;
+
+        // Friction
+        this.vx *= 0.88;
+        this.vy *= 0.88;
+
+        this.x += this.vx;
+        this.y += this.vy;
+      }
+
+      draw() {
+        ctx.fillStyle = 'rgba(0, 229, 255, 0.8)';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Grid population
+    const particles = [];
+    const spacing = 25;
+    for (let x = 0; x < width; x += spacing) {
+      for (let y = 0; y < height; y += spacing) {
+        particles.push(new Particle(x, y));
+      }
+    }
+
+    function animate() {
+      ctx.fillStyle = 'rgba(6, 6, 10, 0.2)'; // Smooth motion trails
+      ctx.fillRect(0, 0, width, height);
+
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>

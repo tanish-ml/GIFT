@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kinetic ASCII Particle Hero</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #020402;
+      color: #00ff66;
+      font-family: 'Courier New', Courier, monospace;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .hero-wrapper {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+    }
+
+    .overlay-ui {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+      text-align: center;
+      bottom: 10%;
+    }
+
+    .overlay-ui p {
+      font-size: 0.85rem;
+      letter-spacing: 3px;
+      color: rgba(0, 255, 102, 0.6);
+      text-transform: uppercase;
+      animation: pulse 2s infinite;
+    }
+
+    /* Back to Showcase Button Styling */
+    .back-btn {
+      position: fixed;
+      top: 2rem;
+      left: 2rem;
+      color: #00ff66;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid #00ff66;
+      background: rgba(0, 10, 3, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      z-index: 100;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+    .back-btn:hover { 
+      background: #00ff66; 
+      color: #000;
+      box-shadow: 0 0 15px #00ff66;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="hero-wrapper">
+    <canvas id="particleCanvas"></canvas>
+    <div class="overlay-ui">
+      <p>[ MOVE CURSOR TO DISTORT PARTICLE FIELD ]</p>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    const RAMP = '@#%*+=-:. ';
+    const TEXT = 'NEURAL';
+    let particles = [];
+
+    const mouse = { x: -1000, y: -1000, radius: 120 };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    window.addEventListener('mouseleave', () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
+    });
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      initParticles();
+    });
+
+    // Generate initial particle grid mapped from offscreen text coordinates
+    function initParticles() {
+      particles = [];
+      
+      const offCanvas = document.createElement('canvas');
+      const offCtx = offCanvas.getContext('2d');
+      offCanvas.width = width;
+      offCanvas.height = height;
+
+      // Render hidden target text
+      const fontSize = Math.min(width * 0.18, 160);
+      offCtx.font = `900 ${fontSize}px sans-serif`;
+      offCtx.fillStyle = '#fff';
+      offCtx.textAlign = 'center';
+      offCtx.textBaseline = 'middle';
+      offCtx.fillText(TEXT, width / 2, height / 2);
+
+      const imgData = offCtx.getImageData(0, 0, width, height).data;
+      const step = Math.floor(Math.max(6, fontSize / 18)); // Adjust density based on screen
+
+      for (let y = 0; y < height; y += step) {
+        for (let x = 0; x < width; x += step) {
+          const index = (y * width + x) * 4;
+          if (imgData[index + 3] > 128) {
+            // Sample alpha channel for text shape
+            const char = RAMP[Math.floor(Math.random() * (RAMP.length - 2))];
+            particles.push({
+              originX: x,
+              originY: y,
+              x: x + (Math.random() - 0.5) * 400, // Spawn exploded
+              y: y + (Math.random() - 0.5) * 400,
+              vx: 0,
+              vy: 0,
+              char: char,
+              color: Math.random() > 0.85 ? '#ffffff' : '#00ff66',
+              size: Math.floor(step * 0.9)
+            });
+          }
+        }
+      }
+    }
+
+    function animate() {
+      ctx.fillStyle = 'rgba(2, 4, 2, 0.25)'; // Motion blur trail
+      ctx.fillRect(0, 0, width, height);
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+
+        // Distance from mouse cursor
+        const dx = mouse.x - p.x;
+        const dy = mouse.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Mouse repulsion physics
+        if (dist < mouse.radius) {
+          const angle = Math.atan2(dy, dx);
+          const force = (mouse.radius - dist) / mouse.radius;
+          const push = force * 12;
+          p.vx -= Math.cos(angle) * push;
+          p.vy -= Math.sin(angle) * push;
+        }
+
+        // Elastic magnetic spring force back to origin
+        const homeDx = p.originX - p.x;
+        const homeDy = p.originY - p.y;
+        
+        p.vx += homeDx * 0.03;
+        p.vy += homeDy * 0.03;
+
+        // Friction damping
+        p.vx *= 0.85;
+        p.vy *= 0.85;
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // Render individual ASCII character
+        ctx.fillStyle = p.color;
+        ctx.font = `bold ${p.size}px monospace`;
+        ctx.fillText(p.char, p.x, p.y);
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    initParticles();
+    animate();
+  </script>
+</body>
+</html>

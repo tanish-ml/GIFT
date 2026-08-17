@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebGL Raymarched ASCII Kernel</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #00ff66;
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+
+    .hud-overlay {
+      position: fixed;
+      top: 30px;
+      left: 30px;
+      z-index: 10;
+      pointer-events: none;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      color: #00ff66;
+      background: rgba(0, 10, 3, 0.85);
+      padding: 12px 18px;
+      border: 1px solid #00ff66;
+      box-shadow: 0 0 20px rgba(0, 255, 102, 0.2);
+    }
+
+    /* Back to Showcase Button Styling */
+    .back-btn {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      color: #00ff66;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid #00ff66;
+      background: rgba(0, 10, 3, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      z-index: 100;
+      text-transform: uppercase;
+      font-weight: bold;
+      cursor: pointer !important;
+    }
+    .back-btn:hover { 
+      background: #00ff66; 
+      color: #000;
+      box-shadow: 0 0 15px #00ff66;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="hud-overlay">
+    KERNEL_CORE: [RAYMARCHED_SDF_TORUS_KNOT]<br>
+    SHADER_PASS: ASCII_TEXTURE_ATLAS // 60FPS<br>
+    [DRAG TO ROTATE 3D GEOMETRY]
+  </div>
+
+  <canvas id="glcanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('glcanvas');
+    const gl = canvas.getContext('webgl');
+
+    if (!gl) {
+      alert("WebGL not supported!");
+    }
+
+    // Vertex Shader
+    const vsSource = `
+      attribute vec2 position;
+      void main() {
+        gl_Position = vec4(position, 0.0, 1.0);
+      }
+    `;
+
+    // Raymarched SDF Shader with ASCII Mapping
+    const fsSource = `
+      precision highp float;
+      uniform vec2 u_resolution;
+      uniform float u_time;
+      uniform vec2 u_mouse;
+
+      // Distance estimation for 3D Torus Knot
+      float sdTorusKnot(vec3 p) {
+        float r1 = 0.9, r2 = 0.35;
+        vec2 q = vec2(length(p.xz) - r1, p.y);
+        float a = atan(p.z, p.x);
+        q *= mat2(cos(a*1.5), -sin(a*1.5), sin(a*1.5), cos(a*1.5));
+        return length(q) - r2;
+      }
+
+      // 3D Rotation Matrix
+      mat3 rotateY(float angle) {
+        float c = cos(angle), s = sin(angle);
+        return mat3(c, 0, s, 0, 1, 0, -s, 0, c);
+      }
+      mat3 rotateX(float angle) {
+        float c = cos(angle), s = sin(angle);
+        return mat3(1, 0, 0, 0, c, -s, 0, s, c);
+      }
+
+      void main() {
+        // Pixelate uv coordinates into ASCII grid blocks
+        vec2 fontSize = vec2(8.0, 14.0);
+        vec2 grid = floor(gl_FragCoord.xy / fontSize);
+        vec2 uv = (grid * fontSize - 0.5 * u_resolution.xy) / u_resolution.y;
+
+        // Raymarching camera
+        vec3 ro = vec3(0.0, 0.0, 2.8); // Camera origin
+        vec3 rd = normalize(vec3(uv, -1.0)); // Ray direction
+
+        mat3 rot = rotateY(u_mouse.x * 6.28 + u_time * 0.4) * rotateX(u_mouse.y * 6.28);
+        ro = rot * ro;
+        rd = rot * rd;
+
+        float t = 0.0;
+        float maxDist = 10.0;
+        float hit = 0.0;
+        vec3 p;
+
+        for (int i = 0; i < 64; i++) {
+          p = ro + rd * t;
+          float d = sdTorusKnot(p);
+          if (d < 0.001) { hit = 1.0; break; }
+          t += d;
+          if (t > maxDist) break;
+        }
+
+        vec3 color = vec3(0.005, 0.02, 0.01);
+
+        if (hit > 0.5) {
+          // Calculate surface normal
+          vec2 e = vec2(0.001, 0.0);
+          vec3 n = normalize(vec3(
+            sdTorusKnot(p + e.xyy) - sdTorusKnot(p - e.xyy),
+            sdTorusKnot(p + e.yxy) - sdTorusKnot(p - e.yxy),
+            sdTorusKnot(p + e.yyx) - sdTorusKnot(p - e.yyx)
+          ));
+
+          // Lighting
+          vec3 lightDir = normalize(vec3(1.0, 2.0, 1.5));
+          float diff = max(dot(n, lightDir), 0.1);
+          float spec = pow(max(dot(reflect(-lightDir, n), -rd), 0.0), 16.0);
+
+          float brightness = diff + spec * 0.8;
+
+          // Color ramp mapping
+          if (brightness > 0.85) {
+            color = vec3(1.0, 1.0, 1.0); // Highlight
+          } else if (brightness > 0.35) {
+            color = vec3(0.0, 1.0, 0.4); // Phosphor green
+          } else {
+            color = vec3(0.0, 0.3, 0.1); // Shadow green
+          }
+        }
+
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `;
+
+    function createShader(gl, type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      return shader;
+    }
+
+    const program = gl.createProgram();
+    gl.attachShader(program, createShader(gl, gl.VERTEX_SHADER, vsSource));
+    gl.attachShader(program, createShader(gl, gl.FRAGMENT_SHADER, fsSource));
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -1, -1,  1, -1, -1,  1,
+      -1,  1,  1, -1,  1,  1,
+    ]), gl.STATIC_DRAW);
+
+    const posAttr = gl.getAttribLocation(program, "position");
+    gl.enableVertexAttribArray(posAttr);
+    gl.vertexAttribPointer(posAttr, 2, gl.FLOAT, false, 0, 0);
+
+    const resUni = gl.getUniformLocation(program, "u_resolution");
+    const timeUni = gl.getUniformLocation(program, "u_time");
+    const mouseUni = gl.getUniformLocation(program, "u_mouse");
+
+    let mouseX = 0.5, mouseY = 0.5;
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX / window.innerWidth;
+      mouseY = e.clientY / window.innerHeight;
+    });
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function render(time) {
+      gl.uniform2f(resUni, canvas.width, canvas.height);
+      gl.uniform1f(timeUni, time * 0.001);
+      gl.uniform2f(mouseUni, mouseX, mouseY);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>

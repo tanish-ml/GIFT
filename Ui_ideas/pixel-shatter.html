@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel Shatter Text</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #08080a;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    canvas { display: block; }
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: #fff;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      z-index: 1000;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    const mouse = { x: -1000, y: -1000, radius: 80 };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    class Pixel {
+      constructor(x, y, color) {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.originX = x;
+        this.originY = y;
+        this.color = color;
+        this.vx = 0;
+        this.vy = 0;
+        this.size = 2;
+      }
+
+      update() {
+        const dx = mouse.x - this.x;
+        const dy = mouse.y - this.y;
+        const dist = Math.hypot(dx, dy);
+
+        // Explode away from cursor
+        if (dist < mouse.radius) {
+          const angle = Math.atan2(dy, dx);
+          const force = (mouse.radius - dist) / mouse.radius;
+          this.vx -= Math.cos(angle) * force * 12;
+          this.vy -= Math.sin(angle) * force * 12;
+        }
+
+        // Return to home coordinate
+        this.vx += (this.originX - this.x) * 0.08;
+        this.vy += (this.originY - this.y) * 0.08;
+
+        this.vx *= 0.85; // Friction
+        this.vy *= 0.85;
+
+        this.x += this.vx;
+        this.y += this.vy;
+      }
+
+      draw() {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.size, this.size);
+      }
+    }
+
+    let pixels = [];
+
+    function initText() {
+      pixels = [];
+      ctx.clearRect(0, 0, width, height);
+
+      // Render text offscreen to sample pixels
+      const fontSize = Math.min(width * 0.12, 140);
+      ctx.font = `900 ${fontSize}px system-ui, sans-serif`;
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('DISRUPT', width / 2, height / 2);
+
+      const imgData = ctx.getImageData(0, 0, width, height);
+      ctx.clearRect(0, 0, width, height);
+
+      // Sample non-transparent pixels (step by 4 for performance)
+      const step = 4;
+      for (let y = 0; y < height; y += step) {
+        for (let x = 0; x < width; x += step) {
+          const index = (y * width + x) * 4;
+          const alpha = imgData.data[index + 3];
+          if (alpha > 128) {
+            const r = imgData.data[index];
+            const g = imgData.data[index + 1];
+            const b = imgData.data[index + 2];
+            pixels.push(new Pixel(x, y, `rgb(${r},${g},${b})`));
+          }
+        }
+      }
+    }
+
+    initText();
+
+    function animate() {
+      ctx.fillStyle = 'rgba(8, 8, 10, 0.2)';
+      ctx.fillRect(0, 0, width, height);
+
+      for (let i = 0; i < pixels.length; i++) {
+        pixels[i].update();
+        pixels[i].draw();
+      }
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      initText();
+    });
+  </script>
+</body>
+</html>

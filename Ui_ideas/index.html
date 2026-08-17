@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>High-Impact UI Elements Showcase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --text: #ffffff;
+      --accent: #00ffcc;
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.08);
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 5rem 2rem;
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(0, 255, 204, 0.06), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(255, 0, 100, 0.06), transparent 25%);
+    }
+    header {
+      text-align: center;
+      margin-bottom: 5rem;
+      animation: fadeInDown 1s ease-out;
+    }
+    h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 900;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(to right, #ffffff, #a3a3a3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1.5px;
+    }
+    p.subtitle {
+      color: #9ca3af;
+      font-size: 1.125rem;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      width: 100%;
+      max-width: 1100px;
+      perspective: 1000px;
+    }
+    
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 2.5rem;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: fadeInUp 0.8s ease-out backwards;
+      backdrop-filter: blur(10px);
+    }
+    
+    .card:nth-child(1) { animation-delay: 0.1s; }
+    .card:nth-child(2) { animation-delay: 0.2s; }
+    .card:nth-child(3) { animation-delay: 0.3s; }
+    .card:nth-child(4) { animation-delay: 0.4s; }
+    .card:nth-child(5) { animation-delay: 0.5s; }
+    .card:nth-child(6) { animation-delay: 0.6s; }
+    .card:nth-child(7) { animation-delay: 0.7s; }
+    .card:nth-child(8) { animation-delay: 0.8s; }
+    .card:nth-child(9) { animation-delay: 0.9s; }
+    .card:nth-child(10) { animation-delay: 1.0s; }
+    .card:nth-child(11) { animation-delay: 1.1s; }
+    .card:nth-child(12) { animation-delay: 1.2s; }
+    .card:nth-child(13) { animation-delay: 1.3s; }
+    .card:nth-child(14) { animation-delay: 1.4s; }
+    .card:nth-child(15) { animation-delay: 1.5s; }
+    .card:nth-child(16) { animation-delay: 1.6s; }
+    .card:nth-child(17) { animation-delay: 1.7s; }
+    .card:nth-child(18) { animation-delay: 1.8s; }
+    .card:nth-child(19) { animation-delay: 1.9s; }
+    .card:nth-child(20) { animation-delay: 2.0s; }
+    .card:nth-child(21) { animation-delay: 2.1s; }
+    .card:nth-child(22) { animation-delay: 2.2s; }
+    .card:nth-child(23) { animation-delay: 2.3s; }
+    .card:nth-child(24) { animation-delay: 2.4s; }
+    .card:nth-child(25) { animation-delay: 2.5s; }
+    .card:nth-child(26) { animation-delay: 2.6s; }
+    .card:nth-child(27) { animation-delay: 2.7s; }
+    .card:nth-child(28) { animation-delay: 2.8s; }
+    .card:nth-child(29) { animation-delay: 2.9s; }
+    .card:nth-child(30) { animation-delay: 3.0s; }
+    .card:nth-child(31) { animation-delay: 3.1s; }
+    .card:nth-child(32) { animation-delay: 3.2s; }
+    .card:nth-child(33) { animation-delay: 3.3s; }
+    .card:nth-child(34) { animation-delay: 3.4s; }
+    .card:nth-child(35) { animation-delay: 3.5s; }
+    .card:nth-child(36) { animation-delay: 3.6s; }
+
+    /* Hover effect */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.05),
+        transparent
+      );
+      transition: transform 0.6s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-10px) scale(1.02);
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 40px rgba(0, 255, 204, 0.1);
+    }
+    
+    .card:hover::before {
+      transform: translateX(200%);
+    }
+
+    .card-number {
+      font-size: 0.875rem;
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-number::before {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 1px;
+      background: var(--accent);
+    }
+    
+    .card h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
+    .card-desc {
+      color: #9ca3af;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Blob background decoration */
+    .blob {
+      position: absolute;
+      filter: blur(80px);
+      z-index: -1;
+      opacity: 0.4;
+      border-radius: 50%;
+      animation: float 10s infinite ease-in-out alternate;
+    }
+    .blob-1 {
+      top: -10%; left: -10%; width: 40vw; height: 40vw; background: #00ffcc22;
+    }
+    .blob-2 {
+      bottom: -10%; right: -10%; width: 50vw; height: 50vw; background: #ff006611;
+      animation-delay: -5s;
+    }
+    
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, 50px) scale(1.1); }
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <header>
+    <h1>Showstopper UI</h1>
+    <p class="subtitle">A curated collection of high-impact interactions built with pure HTML, CSS, and JS. Select a component to experience it.</p>
+  </header>
+  
+  <div class="grid">
+    <a href="kinetic-text.html" class="card">
+      <span class="card-number">01</span>
+      <h2>Kinetic Text Trail</h2>
+      <p class="card-desc">A trailing wave of duplicated text that fluidly follows the pointer with an elastic delay, creating striking 3D optical depth.</p>
+    </a>
+    
+    <a href="magnetic-cards.html" class="card">
+      <span class="card-number">02</span>
+      <h2>Magnetic Glare Cards</h2>
+      <p class="card-desc">Cards that physically pull toward the cursor when hovered and reveal a dynamic radial glare tracking your pointer.</p>
+    </a>
+    
+    <a href="infinite-marquee.html" class="card">
+      <span class="card-number">03</span>
+      <h2>Infinite Marquee</h2>
+      <p class="card-desc">A horizontal scrolling ticker that dynamically speeds up on scroll, maintaining an infinite looping experience.</p>
+    </a>
+    
+    <a href="cursor-reveal.html" class="card">
+      <span class="card-number">04</span>
+      <h2>Cursor Reveal Mask</h2>
+      <p class="card-desc">An interactive spotlight that scratches away a dark overlay wherever the mouse moves, revealing the high-contrast layer beneath.</p>
+    </a>
+
+    <a href="liquid-distortion.html" class="card">
+      <span class="card-number">05</span>
+      <h2>Liquid Distortion Grid</h2>
+      <p class="card-desc">An image grid with a smooth 3D depth-stretch effect and sliding typography overlays.</p>
+    </a>
+    
+    <a href="physics-canvas.html" class="card">
+      <span class="card-number">06</span>
+      <h2>Physics Canvas Cursor</h2>
+      <p class="card-desc">A dynamic cloth-like rope that follows the pointer, reacting to mouse velocity with realistic acceleration and bounce.</p>
+    </a>
+    
+    <a href="variable-typography.html" class="card">
+      <span class="card-number">07</span>
+      <h2>Variable Typography</h2>
+      <p class="card-desc">Text that dynamically shifts its font weight and slant based on the proximity of the user's mouse cursor.</p>
+    </a>
+    
+    <a href="accordion-reveal.html" class="card">
+      <span class="card-number">08</span>
+      <h2>Accordion Reveal</h2>
+      <p class="card-desc">Vertical image columns that dynamically stretch, shrink, and re-balance layout space when hovered.</p>
+    </a>
+    
+    <a href="gooey-blob.html" class="card">
+      <span class="card-number">09</span>
+      <h2>Gooey Blob Merger</h2>
+      <p class="card-desc">Liquid mercury elements that blend smoothly into each other using SVG color matrix filters.</p>
+    </a>
+    
+    <a href="cyberpunk-decoder.html" class="card">
+      <span class="card-number">10</span>
+      <h2>Cyberpunk Decoder</h2>
+      <p class="card-desc">A high-tech matrix scrambling effect that rapidly resolves random symbols into readable text.</p>
+    </a>
+    
+    <a href="depth-chamber.html" class="card">
+      <span class="card-number">11</span>
+      <h2>3D Z-Axis Chamber</h2>
+      <p class="card-desc">A spatial portal that translates vertical scrolling into a forward Z-axis camera flight through 3D layers.</p>
+    </a>
+    
+    <a href="particle-field.html" class="card">
+      <span class="card-number">12</span>
+      <h2>Repulsion Particle Field</h2>
+      <p class="card-desc">A vector field of thousands of ambient canvas particles that violently disperse and spring back around your cursor.</p>
+    </a>
+    
+    <a href="magnetic-ring.html" class="card">
+      <span class="card-number">13</span>
+      <h2>Magnetic Distortion Ring</h2>
+      <p class="card-desc">An interactive SVG cursor that deforms dynamically into a liquid blob based on mouse velocity and vector angle.</p>
+    </a>
+    
+    <a href="scratch-reveal.html" class="card">
+      <span class="card-number">14</span>
+      <h2>Canvas Scratch Reveal</h2>
+      <p class="card-desc">Click and drag to physically scratch away the canvas surface masking layer and reveal glowing media beneath.</p>
+    </a>
+    
+    <a href="kinetic-cylinder.html" class="card">
+      <span class="card-number">15</span>
+      <h2>Volumetric Roll</h2>
+      <p class="card-desc">Typography wrapping around a virtual 3D cylinder that tracks your mouse cursor natively in 3D space.</p>
+    </a>
+    
+    <a href="elastic-cable.html" class="card">
+      <span class="card-number">16</span>
+      <h2>Elastic Physics Cable</h2>
+      <p class="card-desc">Grab, stretch, and release an SVG bezier curve that physically snaps back using realistic spring vibration mathematics.</p>
+    </a>
+    
+    <a href="pixel-shatter.html" class="card">
+      <span class="card-number">17</span>
+      <h2>Pixel Shatter Text</h2>
+      <p class="card-desc">Typography that shatters into thousands of physics-driven particles when hovered and smoothly reconstructs itself.</p>
+    </a>
+    
+    <a href="holographic-card.html" class="card">
+      <span class="card-number">18</span>
+      <h2>Holographic Foil Card</h2>
+      <p class="card-desc">Conic gradients and light refraction vectors simulate high-end luxury foil that shifts colors dynamically with mouse movement.</p>
+    </a>
+    
+    <a href="gravity-sandbox.html" class="card">
+      <span class="card-number">19</span>
+      <h2>Gravity UI Sandbox</h2>
+      <p class="card-desc">Drop interactive physics tags that fall with real gravity, bounce, collide, and react to your mouse velocity.</p>
+    </a>
+    
+    <a href="wave-aura.html" class="card">
+      <span class="card-number">20</span>
+      <h2>Parametric Wave Aura</h2>
+      <p class="card-desc">A multi-layered generative canvas wave that dynamically morphs amplitude, frequency, and phase based on cursor position.</p>
+    </a>
+    
+    <a href="ascii-chamber.html" class="card">
+      <span class="card-number">21</span>
+      <h2>ASCII Depth Chamber</h2>
+      <p class="card-desc">A deep 3D flythrough tunnel rendering an entire gallery of photos and videos as real-time neon CRT phosphor ASCII art.</p>
+    </a>
+    
+    <a href="laser-scanner.html" class="card">
+      <span class="card-number">22</span>
+      <h2>Laser Scanner Hero</h2>
+      <p class="card-desc">An interactive reveal mask mimicking a volumetric laser scanner that converts textures to green CRT ASCII points on hover.</p>
+    </a>
+
+    <a href="kinetic-vortex.html" class="card">
+      <span class="card-number">23</span>
+      <h2>Kinetic ASCII Vortex</h2>
+      <p class="card-desc">Floating green ASCII characters that react to mouse hover with spring physics, dispersing and magnetizing back into typography.</p>
+    </a>
+
+    <a href="glitch-portal.html" class="card">
+      <span class="card-number">24</span>
+      <h2>Matrix Glitch Portal</h2>
+      <p class="card-desc">A high-velocity 3D depth chamber that dynamically warps perspective with speed lines and matrix chromatic glitches on scroll acceleration.</p>
+    </a>
+
+    <a href="thermal-optics.html" class="card">
+      <span class="card-number">25</span>
+      <h2>Thermal Optics Scope</h2>
+      <p class="card-desc">An interactive retro thermal lens flashlight that reveals a hidden ASCII layer and maps character values to heat levels on hover.</p>
+    </a>
+
+    <a href="kinetic-fluid.html" class="card">
+      <span class="card-number">26</span>
+      <h2>Kinetic ASCII Fluid</h2>
+      <p class="card-desc">A dynamic grid of ASCII fluid characters that react to cursor velocity, creating ripples and sloshing like glowing green slime.</p>
+    </a>
+
+    <a href="black-hole.html" class="card">
+      <span class="card-number">27</span>
+      <h2>Black Hole Singularity</h2>
+      <p class="card-desc">A relativistic black hole cursor causing Keplerian orbital swirling, gravitational lensing, and event-horizon absorption of ASCII text.</p>
+    </a>
+
+    <a href="cyber-terrain.html" class="card">
+      <span class="card-number">28</span>
+      <h2>3D Cyber-Terrain</h2>
+      <p class="card-desc">A raymarched 3D wireframe topology model made of elevation-mapped ASCII rows, pitched and rolled by mouse coordinates.</p>
+    </a>
+
+    <a href="raymarched-ascii.html" class="card">
+      <span class="card-number">29</span>
+      <h2>WebGL Raymarched SDF</h2>
+      <p class="card-desc">A true 3D raymarched Signed Distance Field (SDF) torus knot mapping normals and depth directly to an animated WebGL ASCII pixel grid.</p>
+    </a>
+
+    <a href="audio-brain.html" class="card">
+      <span class="card-number">30</span>
+      <h2>Audio Cyber-Brain</h2>
+      <p class="card-desc">A 3D Fibonacci pointcloud sphere that physically deforms, shatters, and pulses to real-time microphone frequency inputs.</p>
+    </a>
+
+    <a href="quantum-fracture.html" class="card">
+      <span class="card-number">31</span>
+      <h2>Quantum Fracture Kernel</h2>
+      <p class="card-desc">Move the cursor to tear the web page along real-time Voronoi fault lines, creating self-replicating ASCII viewports.</p>
+    </a>
+
+    <a href="laser-projector.html" class="card">
+      <span class="card-number">32</span>
+      <h2>Laser Projector Scope</h2>
+      <p class="card-desc">A 3D volumetric emitter head cursor casting raycast laser cones that wrap around DOM elements in real-time perspective.</p>
+    </a>
+
+    <a href="gravity-collapse.html" class="card">
+      <span class="card-number">33</span>
+      <h2>DOM Gravity Collapse</h2>
+      <p class="card-desc">Tear standard DOM cards out of their CSS grid flow, throwing them into a simulated gravitational orbit around your cursor.</p>
+    </a>
+
+    <a href="fluid-metaballs.html" class="card">
+      <span class="card-number">34</span>
+      <h2>Fluid ASCII Metaballs</h2>
+      <p class="card-desc">A dynamic, hydrophobic fluid metaball simulation that splits, merges, and flows dynamically inside an ASCII grid.</p>
+    </a>
+
+    <a href="cyberpunk-cursor.html" class="card">
+      <span class="card-number">35</span>
+      <h2>Spectral Ghost Cursor</h2>
+      <p class="card-desc">A custom cyberpunk HUD crosshair cursor linked to a sequence of fading, delayed ghost outline segments that lag behind.</p>
+    </a>
+
+    <a href="s-depth-chamber.html" class="card">
+      <span class="card-number">36</span>
+      <h2>S-Path Depth Chamber</h2>
+      <p class="card-desc">An interactive 3D Z-axis depth travel tunnel featuring a sinusoidal S-curve camera path descent, parallax panels, and depth fades.</p>
+    </a>
+  </div>
+</body>
+</html>

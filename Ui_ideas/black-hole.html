@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gravitational Singularity Hero</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+    body {
+      background: #000402;
+      color: #00ff66;
+      font-family: 'Courier New', Courier, monospace;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* CRT Scanline FX */
+    .crt {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.6) 50%);
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Event Horizon Ring Cursor Marker */
+    .singularity-ring {
+      position: fixed;
+      width: 60px;
+      height: 60px;
+      border: 1px dashed rgba(0, 255, 102, 0.8);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 20;
+      transform: translate(-50%, -50%);
+      animation: spin 8s linear infinite;
+      box-shadow: 0 0 15px rgba(0, 255, 102, 0.3), inset 0 0 10px rgba(0, 255, 102, 0.2);
+    }
+
+    @keyframes spin {
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    .hud {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      color: #00ff66;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      z-index: 30;
+      background: rgba(0, 10, 3, 0.85);
+      border: 1px solid #00ff66;
+      padding: 8px 14px;
+      border-radius: 4px;
+    }
+
+    /* Back to Showcase Button Styling */
+    .back-btn {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      color: #00ff66;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid #00ff66;
+      background: rgba(0, 10, 3, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      z-index: 100;
+      text-transform: uppercase;
+      font-weight: bold;
+      cursor: pointer !important; /* Override cursor: none */
+    }
+    .back-btn:hover { 
+      background: #00ff66; 
+      color: #000;
+      box-shadow: 0 0 15px #00ff66;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="crt"></div>
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+  <div class="singularity-ring" id="ring"></div>
+  <div class="hud" id="hud">SINGULARITY_MASS: 4.2M M☉ // WARP_FIELD: ACTIVE</div>
+
+  <canvas id="singularityCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('singularityCanvas');
+    const ctx = canvas.getContext('2d');
+    const ring = document.getElementById('ring');
+    const hud = document.getElementById('hud');
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    const RAMP = ' .:-=+*#%@';
+    const gridSpacing = 18;
+
+    const mouse = { x: width / 2, y: height / 2, mass: 180 };
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      ring.style.left = `${mouse.x}px`;
+      ring.style.top = `${mouse.y}px`;
+    });
+
+    let time = 0;
+
+    function render() {
+      time += 0.02;
+      ctx.fillStyle = '#000402';
+      ctx.fillRect(0, 0, width, height);
+
+      const cols = Math.floor(width / gridSpacing);
+      const rows = Math.floor(height / gridSpacing);
+
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+
+      const eventHorizon = 25; // Sucked into pure void
+      const influenceRadius = mouse.mass;
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const origX = x * gridSpacing + gridSpacing / 2;
+          const origY = y * gridSpacing + gridSpacing / 2;
+
+          const dx = origX - mouse.x;
+          const dy = origY - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < eventHorizon) {
+            // Sucked past the Event Horizon (Pure darkness shadow)
+            continue;
+          }
+
+          let drawX = origX;
+          let drawY = origY;
+          let intensity = 30 + Math.sin(x * 0.1 + time) * 20;
+
+          if (dist < influenceRadius) {
+            // Gravitational lensing calculation
+            const angle = Math.atan2(dy, dx);
+            
+            // Relativistic gravitational pull + Orbital swirl
+            const pull = Math.pow((influenceRadius - dist) / influenceRadius, 2) * 45;
+            const swirlAngle = angle + (influenceRadius / (dist + 5)) * 0.8;
+
+            drawX = origX - Math.cos(swirlAngle) * pull;
+            drawY = origY - Math.sin(swirlAngle) * pull;
+
+            // Accretion disk brightness flare
+            intensity += Math.pow((influenceRadius - dist) / influenceRadius, 1.5) * 225;
+          }
+
+          intensity = Math.min(255, Math.max(0, intensity));
+          const charIdx = Math.floor((intensity / 255) * (RAMP.length - 1));
+          const char = RAMP[charIdx];
+
+          // Photonic Accretion Glow Colors
+          if (dist < eventHorizon + 15) {
+            ctx.fillStyle = '#ffffff'; // Blinding photon ring
+            ctx.font = '900 16px monospace';
+          } else if (dist < influenceRadius * 0.5) {
+            ctx.fillStyle = '#00ffff'; // Relativistic Doppler shift
+            ctx.font = 'bold 14px monospace';
+          } else if (dist < influenceRadius) {
+            ctx.fillStyle = '#00ff66'; // Phosphor green
+            ctx.font = 'bold 12px monospace';
+          } else {
+            ctx.fillStyle = '#003311'; // Ambient background grid
+            ctx.font = '11px monospace';
+          }
+
+          ctx.fillText(char, drawX, drawY);
+        }
+      }
+
+      hud.innerText = `SINGULARITY: [X:${Math.round(mouse.x)} Y:${Math.round(mouse.y)}] // ACCRETION_TEMP: ${Math.floor(8000 + Math.random() * 500)}K`;
+
+      requestAnimationFrame(render);
+    }
+
+    render();
+  </script>
+</body>
+</html>

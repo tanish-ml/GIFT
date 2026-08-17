@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cursor Reveal Mask</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      height: 100vh;
+      overflow: hidden;
+      font-family: system-ui, sans-serif;
+    }
+    .layer {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+    .base-layer {
+      background: #f4f4f0;
+      color: #111;
+    }
+    .base-layer h1 { font-size: 6vw; font-weight: 800; }
+    .reveal-layer {
+      background: #111;
+      color: #00ffcc;
+      clip-path: circle(0px at 0px 0px);
+      transition: clip-path 0.05s ease-out;
+    }
+    .reveal-layer h1 { font-size: 6vw; font-weight: 800; }
+    
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: #111;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid rgba(17,17,17,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      z-index: 100;
+    }
+    .back-btn:hover { background: rgba(17,17,17,0.1); }
+    
+    .reveal-layer .back-btn {
+      color: #fff;
+      border-color: rgba(255,255,255,0.2);
+    }
+    .reveal-layer .back-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Base Content -->
+  <div class="layer base-layer">
+    <a href="index.html" class="back-btn">← Back to Showcase</a>
+    <h1>WE BUILD STANDARD WEBSITES</h1>
+    <p>Move your cursor around to reveal what's underneath.</p>
+  </div>
+
+  <!-- Revealed Hidden Content -->
+  <div class="layer reveal-layer" id="reveal">
+    <a href="index.html" class="back-btn">← Back to Showcase</a>
+    <h1>WE CREATE DIGITAL EXPERIENCES</h1>
+    <p>Tailored specifically for brands that want to stand out.</p>
+  </div>
+
+  <script>
+    const reveal = document.getElementById('reveal');
+
+    window.addEventListener('mousemove', (e) => {
+      const radius = 160; // Size of spotlight circle
+      reveal.style.clipPath = `circle(${radius}px at ${e.clientX}px ${e.clientY}px)`;
+    });
+  </script>
+</body>
+</html>

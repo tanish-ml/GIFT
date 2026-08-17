@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Squishy Liquid Cursor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #090a0f;
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+      cursor: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: system-ui, sans-serif;
+    }
+
+    /* Custom SVG Cursor */
+    .cursor-svg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .hero-text {
+      font-size: 6vw;
+      font-weight: 900;
+      letter-spacing: -2px;
+      text-transform: uppercase;
+      user-select: none;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: #fff;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      z-index: 1000; /* above cursor-svg if needed */
+      cursor: pointer;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <h1 class="hero-text">MOVE CURSOR FAST</h1>
+
+  <svg class="cursor-svg">
+    <path id="blobPath" fill="none" stroke="#00ffcc" stroke-width="3" />
+  </svg>
+
+  <script>
+    const path = document.getElementById('blobPath');
+    let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    let pos = { x: mouse.x, y: mouse.y };
+    let vel = { x: 0, y: 0 };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    function animate() {
+      // Calculate velocity vectors
+      vel.x += (mouse.x - pos.x) * 0.15;
+      vel.y += (mouse.y - pos.y) * 0.15;
+      vel.x *= 0.75;
+      vel.y *= 0.75;
+
+      pos.x += vel.x;
+      pos.y += vel.y;
+
+      const speed = Math.hypot(vel.x, vel.y);
+      const angle = Math.atan2(vel.y, vel.x);
+
+      // Deform circle radii based on velocity
+      const rx = Math.min(35 + speed * 1.2, 90);
+      const ry = Math.max(35 - speed * 0.5, 12);
+
+      // Construct dynamic distorted SVG path ellipse rotated along vector angle
+      const points = 8;
+      let d = "";
+      for (let i = 0; i < points; i++) {
+        const a = (i / points) * Math.PI * 2;
+        const cos = Math.cos(a);
+        const sin = Math.sin(a);
+        
+        // Rotate points to movement vector angle
+        const rotatedX = cos * rx * Math.cos(angle) - sin * ry * Math.sin(angle);
+        const rotatedY = cos * rx * Math.sin(angle) + sin * ry * Math.cos(angle);
+
+        const px = pos.x + rotatedX;
+        const py = pos.y + rotatedY;
+
+        d += (i === 0 ? "M" : "L") + ` ${px},${py} `;
+      }
+      d += "Z";
+
+      path.setAttribute("d", d);
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>

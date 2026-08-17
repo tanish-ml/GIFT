@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gravity UI Sandbox</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #09090b;
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+      font-family: system-ui, sans-serif;
+      user-select: none;
+    }
+    canvas { display: block; }
+    .hint {
+      position: absolute;
+      top: 30px;
+      width: 100%;
+      text-align: center;
+      color: #666;
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+      pointer-events: none;
+    }
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: #fff;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      z-index: 1000;
+      pointer-events: auto; /* ensure clickable over canvas */
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="hint">CLICK ANYWHERE TO DROP PHYSICS ELEMENTS</div>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    const gravity = 0.4;
+    const bounce = 0.7;
+    const friction = 0.98;
+
+    const labels = ["DESIGN", "DEVELOP", "AI MODEL", "WEBSITE", "LAUNCH", "INNOVATE", "CREATIVE"];
+    const bodies = [];
+
+    let mouse = { x: -1000, y: -1000, vx: 0, vy: 0, prevX: 0, prevY: 0 };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.vx = e.clientX - mouse.prevX;
+      mouse.vy = e.clientY - mouse.prevY;
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.prevX = e.clientX;
+      mouse.prevY = e.clientY;
+    });
+
+    class Body {
+      constructor(x, y, text) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.vx = (Math.random() - 0.5) * 8;
+        this.vy = (Math.random() - 0.5) * 5;
+        this.radius = 35 + text.length * 4;
+        this.color = `hsl(${Math.random() * 360}, 80%, 60%)`;
+      }
+
+      update() {
+        this.vy += gravity;
+        this.vx *= friction;
+        this.vy *= friction;
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Wall Collisions
+        if (this.x + this.radius > width) {
+          this.x = width - this.radius;
+          this.vx *= -bounce;
+        } else if (this.x - this.radius < 0) {
+          this.x = this.radius;
+          this.vx *= -bounce;
+        }
+
+        // Floor / Ceiling Collisions
+        if (this.y + this.radius > height) {
+          this.y = height - this.radius;
+          this.vy *= -bounce;
+        } else if (this.y - this.radius < 0) {
+          this.y = this.radius;
+          this.vy *= -bounce;
+        }
+
+        // Mouse Impulse Hit
+        const dx = this.x - mouse.x;
+        const dy = this.y - mouse.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < this.radius + 30) {
+          this.vx += mouse.vx * 0.5;
+          this.vy += mouse.vy * 0.5;
+        }
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Pill shape
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 2;
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Label
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 12px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.text, 0, 0);
+
+        ctx.restore();
+      }
+    }
+
+    // Spawn on click
+    window.addEventListener('click', (e) => {
+      // Don't spawn if clicking the back button
+      if (e.target.className === 'back-btn') return;
+      const randomText = labels[Math.floor(Math.random() * labels.length)];
+      bodies.push(new Body(e.clientX, e.clientY, randomText));
+    });
+
+    // Spawn initial elements
+    for (let i = 0; i < 6; i++) {
+      bodies.push(new Body(width / 2 + (i * 20 - 50), 100, labels[i % labels.length]));
+    }
+
+    function animate() {
+      ctx.fillStyle = '#09090b';
+      ctx.fillRect(0, 0, width, height);
+
+      bodies.forEach(b => {
+        b.update();
+        b.draw();
+      });
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kinetic Variable Typography</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+    }
+    .text-container {
+      display: flex;
+      gap: 4px;
+      cursor: default;
+      user-select: none;
+    }
+    .char {
+      font-size: 9vw;
+      font-weight: 100;
+      display: inline-block;
+      transition: font-weight 0.1s ease, transform 0.1s ease;
+      will-change: font-weight, transform;
+    }
+    
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: #fff;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      z-index: 100;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="text-container" id="text">KINETIC</div>
+
+  <script>
+    const container = document.getElementById('text');
+    const str = container.innerText;
+    container.innerHTML = '';
+
+    // Split text into individual spans
+    const chars = str.split('').map(char => {
+      const span = document.createElement('span');
+      span.className = 'char';
+      span.innerText = char;
+      container.appendChild(span);
+      return span;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      chars.forEach(char => {
+        const rect = char.getBoundingClientRect();
+        const charCenterX = rect.left + rect.width / 2;
+        const charCenterY = rect.top + rect.height / 2;
+
+        const dist = Math.hypot(e.clientX - charCenterX, e.clientY - charCenterY);
+        const maxDist = 300;
+
+        if (dist < maxDist) {
+          // Normalize proximity factor (1 at center, 0 at outer edge)
+          const factor = 1 - (dist / maxDist);
+          const weight = 100 + (factor * 800); // 100 to 900 weight
+          const translateY = -factor * 30;     // Elevate letter
+
+          char.style.fontWeight = weight;
+          char.style.transform = `translateY(${translateY}px)`;
+        } else {
+          char.style.fontWeight = 100;
+          char.style.transform = `translateY(0px)`;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Physics Trail Canvas</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #050505; overflow: hidden; height: 100vh; }
+    canvas { display: block; }
+    .overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-family: sans-serif;
+      font-size: 3vw;
+      font-weight: 900;
+      pointer-events: none;
+      letter-spacing: 4px;
+      text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      z-index: 10;
+    }
+    
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: #fff;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      z-index: 100;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="overlay">FLUID PHYSICS</div>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    const points = [];
+    const length = 40; // longer tail
+    let mouse = { x: width / 2, y: height / 2 };
+
+    for (let i = 0; i < length; i++) {
+      points.push({ x: mouse.x, y: mouse.y, vx: 0, vy: 0 });
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    let hue = 0;
+
+    function animate() {
+      // Motion blur effect
+      ctx.fillStyle = 'rgba(5, 5, 5, 0.3)';
+      ctx.fillRect(0, 0, width, height);
+
+      // Leader point follows mouse
+      points[0].x += (mouse.x - points[0].x) * 0.4;
+      points[0].y += (mouse.y - points[0].y) * 0.4;
+
+      // Spring physics for following points
+      for (let i = 1; i < length; i++) {
+        const p1 = points[i - 1];
+        const p2 = points[i];
+
+        p2.vx += (p1.x - p2.x) * 0.3;
+        p2.vy += (p1.y - p2.y) * 0.3;
+        p2.vx *= 0.65; // Friction
+        p2.vy *= 0.65;
+
+        p2.x += p2.vx;
+        p2.y += p2.vy;
+      }
+
+      // Draw multi-layered glowing ribbon
+      hue += 1;
+
+      for (let j = 0; j < 3; j++) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+
+        for (let i = 1; i < length - 1; i++) {
+          const xc = (points[i].x + points[i + 1].x) / 2;
+          const yc = (points[i].y + points[i + 1].y) / 2;
+          
+          // Slight offset for layers to create thickness
+          const offset = (j - 1) * (i * 0.1); 
+          ctx.quadraticCurveTo(points[i].x + offset, points[i].y + offset, xc, yc);
+        }
+
+        ctx.strokeStyle = `hsla(${hue + j * 20}, 100%, 60%, ${1 - j * 0.2})`;
+        ctx.lineWidth = 15 - j * 4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.5)`;
+        ctx.stroke();
+      }
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spectral Ghost HUD Cursor</title>
+  <style>
+    /* Force hide standard cursor on EVERYTHING */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      cursor: none !important;
+    }
+
+    body {
+      background: #020504;
+      color: #00ff66;
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    /* Subtle Scanlines Overlay */
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.7) 50%);
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 900;
+    }
+
+    /* Ambient Grid Background */
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(0, 255, 102, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 102, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Interactive Interface Elements to Test Target Lock */
+    .container {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      max-width: 800px;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      text-shadow: 0 0 15px rgba(0, 255, 102, 0.6);
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #00aa44;
+      letter-spacing: 3px;
+      font-size: 0.9rem;
+      margin-bottom: 40px;
+    }
+
+    .targets-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .interactive-card {
+      background: rgba(0, 20, 10, 0.6);
+      border: 1px solid #00ff66;
+      padding: 25px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .interactive-card:hover {
+      background: rgba(255, 0, 85, 0.1);
+      border-color: #ff0055;
+      box-shadow: 0 0 25px rgba(255, 0, 85, 0.4);
+      transform: translateY(-4px);
+    }
+
+    .interactive-card h3 {
+      color: #fff;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .interactive-card span {
+      font-size: 0.75rem;
+      color: #00ff66;
+      letter-spacing: 1px;
+    }
+
+    .interactive-card:hover span {
+      color: #ff0055;
+    }
+
+    /* Back to Showcase Button Styling */
+    .back-btn {
+      position: fixed;
+      top: 2rem;
+      left: 2rem; /* Keep on left so user can click */
+      color: #00ff66;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid #00ff66;
+      background: rgba(0, 10, 3, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      z-index: 10000;
+      text-transform: uppercase;
+      font-weight: bold;
+      cursor: pointer !important;
+    }
+    .back-btn:hover { 
+      background: #ff0055; 
+      color: #000;
+      border-color: #ff0055;
+      box-shadow: 0 0 15px #ff0055;
+    }
+
+    /* -------------------------------------------------- */
+    /* CUSTOM SPECTRAL GHOST CURSOR STYLES                */
+    /* -------------------------------------------------- */
+
+    .cursor-node {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 1000;
+      will-change: transform;
+      transform: translate3d(-100px, -100px, 0);
+    }
+
+    /* Base Reticle Structure */
+    .hud-reticle {
+      width: 44px;
+      height: 44px;
+      margin-left: -22px;
+      margin-top: -22px;
+      border: 1px solid #00ff66;
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    }
+
+    /* Center Crosshair Dot */
+    .hud-reticle::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      background: #00ff66;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #00ff66;
+    }
+
+    /* Ticks / Crosshairs */
+    .hud-reticle::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border: 1px dashed rgba(0, 255, 102, 0.6);
+      border-radius: 50%;
+      animation: spin 12s linear infinite;
+    }
+
+    .hud-label {
+      position: absolute;
+      top: 26px;
+      left: 26px;
+      font-size: 0.6rem;
+      letter-spacing: 1px;
+      color: #00ff66;
+      white-space: nowrap;
+      background: rgba(0, 5, 2, 0.8);
+      padding: 2px 6px;
+      border: 1px solid rgba(0, 255, 102, 0.4);
+      pointer-events: none;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Ghost Trail Nodes (1 to 4) */
+    .ghost-1 .hud-reticle {
+      width: 36px;
+      height: 36px;
+      margin-left: -18px;
+      margin-top: -18px;
+      opacity: 0.65;
+      border-color: #00e55c;
+      box-shadow: 0 0 8px rgba(0, 229, 92, 0.3);
+    }
+    .ghost-1 .hud-label { display: none; }
+
+    .ghost-2 .hud-reticle {
+      width: 28px;
+      height: 28px;
+      margin-left: -14px;
+      margin-top: -14px;
+      opacity: 0.45;
+      border-color: #00cc52;
+    }
+    .ghost-2 .hud-label { display: none; }
+
+    .ghost-3 .hud-reticle {
+      width: 20px;
+      height: 20px;
+      margin-left: -10px;
+      margin-top: -10px;
+      opacity: 0.25;
+      border-color: #00993d;
+    }
+    .ghost-3 .hud-label { display: none; }
+
+    .ghost-4 .hud-reticle {
+      width: 12px;
+      height: 12px;
+      margin-left: -6px;
+      margin-top: -6px;
+      opacity: 0.12;
+      border-color: #006629;
+    }
+    .ghost-4 .hud-label { display: none; }
+
+    /* HOVER / TARGET LOCKED STATE */
+    body.target-locked .hud-reticle {
+      border-color: #ff0055;
+      box-shadow: 0 0 20px #ff0055, inset 0 0 10px rgba(255, 0, 85, 0.5);
+      transform: scale(1.25) rotate(45deg);
+    }
+
+    body.target-locked .hud-reticle::before {
+      background: #ff0055;
+      box-shadow: 0 0 10px #ff0055;
+    }
+
+    body.target-locked .hud-reticle::after {
+      border-color: #ff0055;
+      animation-duration: 2s;
+    }
+
+    body.target-locked .hud-label {
+      color: #ff0055;
+      border-color: #ff0055;
+      content: 'TARGET_LOCKED';
+    }
+
+    body.target-locked .ghost-node .hud-reticle {
+      border-color: #ff0055;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scanlines"></div>
+  <div class="grid-bg"></div>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <!-- Interactive Target Field -->
+  <div class="container">
+    <h1>TACTICAL HUD</h1>
+    <p>[ HOVER OVER NODES TO ENGAGE TARGET LOCK ]</p>
+
+    <div class="targets-grid">
+      <div class="interactive-card interactive">
+        <h3>NODE_01</h3>
+        <span>[ STATUS: ONLINE ]</span>
+      </div>
+      <div class="interactive-card interactive">
+        <h3>NODE_02</h3>
+        <span>[ STATUS: ACTIVE ]</span>
+      </div>
+      <div class="interactive-card interactive">
+        <h3>NODE_03</h3>
+        <span>[ STATUS: ARMED ]</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Cursor HUD -->
+  <div class="cursor-node" id="cursor-main">
+    <div class="hud-reticle"></div>
+    <div class="hud-label" id="hud-text">TRK // 0x9A</div>
+  </div>
+
+  <!-- Chained Spectral Ghost Nodes (4 Fading Trail Layers) -->
+  <div class="cursor-node ghost-node ghost-1" id="ghost-1">
+    <div class="hud-reticle"></div>
+  </div>
+  <div class="cursor-node ghost-node ghost-2" id="ghost-2">
+    <div class="hud-reticle"></div>
+  </div>
+  <div class="cursor-node ghost-node ghost-3" id="ghost-3">
+    <div class="hud-reticle"></div>
+  </div>
+  <div class="cursor-node ghost-node ghost-4" id="ghost-4">
+    <div class="hud-reticle"></div>
+  </div>
+
+  <script>
+    const mainCursor = document.getElementById('cursor-main');
+    const hudText = document.getElementById('hud-text');
+    
+    // Ghost elements array
+    const ghosts = [
+      document.getElementById('ghost-1'),
+      document.getElementById('ghost-2'),
+      document.getElementById('ghost-3'),
+      document.getElementById('ghost-4')
+    ];
+
+    // Real-time Mouse position
+    const mouse = { x: -100, y: -100 };
+
+    // Kinematic Trail Points Array (0 = Main Cursor, 1-4 = Ghosts)
+    const points = [
+      { x: -100, y: -100 }, // Main
+      { x: -100, y: -100 }, // Ghost 1
+      { x: -100, y: -100 }, // Ghost 2
+      { x: -100, y: -100 }, // Ghost 3
+      { x: -100, y: -100 }  // Ghost 4
+    ];
+
+    // Follow speeds for chained lag (Higher = tighter, Lower = more drag)
+    const lerpSpeeds = [1.0, 0.42, 0.28, 0.18, 0.10];
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+
+      // Check if mouse is hovering over interactive element
+      const isTarget = e.target.closest('.interactive, a, button, input');
+      if (isTarget) {
+        document.body.classList.add('target-locked');
+        hudText.innerText = 'LOCK // ENGAGED';
+      } else {
+        document.body.classList.remove('target-locked');
+        hudText.innerText = `TRK // [${Math.round(mouse.x)},${Math.round(mouse.y)}]`;
+      }
+    });
+
+    function renderAnimation() {
+      // Point 0 snaps directly to mouse
+      points[0].x = mouse.x;
+      points[0].y = mouse.y;
+
+      // Render Main Cursor position
+      mainCursor.style.transform = `translate3d(${points[0].x}px, ${points[0].y}px, 0)`;
+
+      // Kinematic Chained Physics Update Loop for Ghost Nodes
+      for (let i = 1; i < points.length; i++) {
+        const prev = points[i - 1];
+        const current = points[i];
+
+        // Smooth Lerp toward preceding node
+        current.x += (prev.x - current.x) * lerpSpeeds[i];
+        current.y += (prev.y - current.y) * lerpSpeeds[i];
+
+        // Render Ghost Node position
+        ghosts[i - 1].style.transform = `translate3d(${current.x}px, ${current.y}px, 0)`;
+      }
+
+      requestAnimationFrame(renderAnimation);
+    }
+
+    renderAnimation();
+  </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kinetic 3D Cylinder Roll</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #050505;
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 1000px;
+      font-family: sans-serif;
+    }
+
+    .cylinder {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      transform-style: preserve-3d;
+      cursor: grab;
+    }
+    .cylinder:active { cursor: grabbing; }
+
+    .face {
+      position: absolute;
+      width: 100%;
+      height: 50px;
+      left: 0;
+      top: 125px;
+      font-size: 2.5rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+      backface-visibility: visible;
+      color: #00ffcc;
+      text-shadow: 0 0 10px rgba(0,255,204,0.5);
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: #fff;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      z-index: 1000;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="cylinder" id="cylinder"></div>
+
+  <script>
+    const cylinder = document.getElementById('cylinder');
+    const totalFaces = 12;
+    const radius = 200; // Cylinder radius
+
+    // Dynamically generate cylinder faces around circle
+    for (let i = 0; i < totalFaces; i++) {
+      const face = document.createElement('div');
+      face.className = 'face';
+      face.innerText = 'VOLUMETRIC';
+      
+      const angle = (i / totalFaces) * 360;
+      face.style.transform = `rotateX(${angle}deg) translateZ(${radius}px)`;
+      cylinder.appendChild(face);
+    }
+
+    let rotX = 0, rotY = 0;
+    let targetRotX = 0, targetRotY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      targetRotX = (e.clientY - window.innerHeight / 2) * -0.2;
+      targetRotY = (e.clientX - window.innerWidth / 2) * 0.2;
+    });
+
+    function animate() {
+      rotX += (targetRotX - rotX) * 0.05;
+      rotY += (targetRotY - rotY) * 0.05;
+
+      cylinder.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>

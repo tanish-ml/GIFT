@@ -1,0 +1,135 @@
+.stage4-container {
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
+    overflow: hidden;
+    position: relative;
+    user-select: none;
+    cursor: crosshair;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: filter 0.1s linear;
+}
+
+.stage4-container.glitching {
+    animation: proximityGlitch 0.2s infinite;
+    filter: hue-rotate(90deg) contrast(1.5) saturate(2);
+}
+
+@keyframes proximityGlitch {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(-5px, 5px); }
+    40% { transform: translate(5px, -5px); }
+    60% { transform: translate(-5px, -5px); }
+    80% { transform: translate(5px, 5px); }
+    100% { transform: translate(0, 0); }
+}
+
+.audio-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.9);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #0f0;
+    font-family: monospace;
+    text-align: center;
+}
+
+.audio-overlay h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #0f0;
+}
+
+.btn-start-audio {
+    background: transparent;
+    border: 2px solid #0f0;
+    color: #0f0;
+    padding: 15px 40px;
+    font-family: monospace;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+    transition: all 0.3s;
+}
+
+.btn-start-audio:hover {
+    background: #0f0;
+    color: #000;
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
+}
+
+.win-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #0f0;
+    z-index: 200;
+    display: none; /* hidden by default */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #000;
+    font-family: monospace;
+}
+
+.win-overlay h1 {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: flash 0.1s infinite;
+}
+
+@keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+.ui-tracker {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    color: #0f0;
+    font-family: monospace;
+    font-size: 16px;
+    text-shadow: 0 0 5px #0f0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.radar-sweep {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid #0f0;
+    position: relative;
+    overflow: hidden;
+}
+
+.radar-sweep::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    background: conic-gradient(from 0deg, transparent 70%, #0f0 100%);
+    transform-origin: 0 0;
+    animation: sweep 2s linear infinite;
+}
+
+@keyframes sweep {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

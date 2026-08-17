@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holographic Refraction Card</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #08090c;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: system-ui, sans-serif;
+      perspective: 1000px;
+    }
+
+    .holo-card {
+      width: 360px;
+      height: 220px;
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+      background: #12131a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform 0.1s ease-out;
+    }
+
+    /* Rainbow Foil Refraction Layer */
+    .holo-card::before {
+      content: '';
+      position: absolute;
+      inset: -50%;
+      background: conic-gradient(
+        from var(--angle, 0deg) at var(--x, 50%) var(--y, 50%),
+        #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff0000
+      );
+      mix-blend-mode: color-dodge;
+      opacity: var(--opacity, 0);
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Metallic Specular Highlight Overlay */
+    .holo-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle at var(--x, 50%) var(--y, 50%),
+        rgba(255, 255, 255, 0.6) 0%,
+        rgba(255, 255, 255, 0) 60%
+      );
+      mix-blend-mode: overlay;
+      opacity: var(--opacity, 0);
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .card-content {
+      position: relative;
+      z-index: 2;
+      padding: 28px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: #fff;
+    }
+
+    .chip {
+      width: 42px;
+      height: 30px;
+      background: linear-gradient(135deg, #ffd700, #b8860b);
+      border-radius: 6px;
+    }
+
+    .number {
+      font-family: monospace;
+      font-size: 1.25rem;
+      letter-spacing: 3px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: #fff;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      z-index: 1000;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="holo-card" id="card">
+    <div class="card-content">
+      <div class="chip"></div>
+      <div class="number">4532 •••• •••• 8891</div>
+      <div style="display:flex; justify-content:space-between; font-size:0.8rem; letter-spacing:1px;">
+        <span>BLACK EDITION</span>
+        <span>08/28</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const card = document.getElementById('card');
+
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const px = (x / rect.width) * 100;
+      const py = (y / rect.height) * 100;
+
+      const rotX = ((y - rect.height / 2) / (rect.height / 2)) * -18;
+      const rotY = ((x - rect.width / 2) / (rect.width / 2)) * 18;
+
+      // Calculate optical light incidence angle
+      const angle = Math.atan2(y - rect.height / 2, x - rect.width / 2) * (180 / Math.PI);
+
+      card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.04, 1.04, 1.04)`;
+      card.style.setProperty('--x', `${px}%`);
+      card.style.setProperty('--y', `${py}%`);
+      card.style.setProperty('--angle', `${angle}deg`);
+      card.style.setProperty('--opacity', '0.7');
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+      card.style.setProperty('--opacity', '0');
+    });
+  </script>
+</body>
+</html>

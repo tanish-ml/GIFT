@@ -1,0 +1,137 @@
+.stage3-flappy-container {
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    font-family: monospace;
+    user-select: none;
+}
+
+#flappy-canvas {
+    width: 100%;
+    max-width: 1200px;
+    background-color: #000;
+    border: 2px solid #0f0;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+}
+
+.flappy-score {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 48px;
+    color: #0f0;
+    font-weight: bold;
+    z-index: 10;
+    text-shadow: 0 0 10px #0f0;
+}
+
+.flappy-warning {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #f00;
+    font-size: 40px;
+    font-weight: bold;
+    text-shadow: 0 0 10px #f00, 0 0 20px #f00;
+    animation: flashWarning 0.2s infinite;
+    pointer-events: none;
+    display: none;
+    z-index: 15;
+    text-align: center;
+    width: 100%;
+}
+
+@keyframes flashWarning {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0; transform: translate(-50%, -50%) scale(1.1); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.flappy-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 20;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 30px;
+    border: 2px solid #0f0;
+    width: 80%;
+    max-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    display: none;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.flappy-overlay h2 {
+    color: #f00;
+    margin: 0 0 10px 0;
+    font-size: 32px;
+    text-shadow: 0 0 10px #f00;
+}
+
+.flappy-overlay p {
+    color: #0f0;
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.flappy-btn {
+    background: #000;
+    border: 2px solid #0f0;
+    color: #0f0;
+    padding: 12px 20px;
+    font-size: 18px;
+    font-family: monospace;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.flappy-btn:hover {
+    background: #0f0;
+    color: #000;
+    box-shadow: 0 0 10px #0f0;
+}
+
+.flappy-btn-trap {
+    border-color: #f00;
+    color: #f00;
+}
+
+.flappy-btn-trap:hover {
+    background: #f00;
+    color: #000;
+    box-shadow: 0 0 10px #f00;
+}
+
+.glitch-win {
+    animation: terminalGlitch 0.2s infinite;
+    color: #0f0 !important;
+    text-shadow: 0 0 15px #0f0 !important;
+}
+
+.flappy-start-popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #000;
+    border: 2px solid #0f0;
+    color: #0f0;
+    padding: 20px 40px;
+    font-size: 24px;
+    font-family: monospace;
+    z-index: 30;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+}

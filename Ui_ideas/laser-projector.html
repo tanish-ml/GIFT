@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volumetric Laser Projection Chamber</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+    body {
+      background: #000;
+      color: #00ff66;
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+    }
+
+    /* Target UI elements inside the holographic chamber */
+    .holo-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      pointer-events: none;
+      text-align: center;
+      border: 2px solid rgba(0, 255, 102, 0.4);
+      padding: 40px;
+      background: rgba(0, 10, 4, 0.7);
+      box-shadow: 0 0 30px rgba(0, 255, 102, 0.2);
+    }
+
+    .holo-content h1 {
+      font-size: 4rem;
+      letter-spacing: 12px;
+      text-shadow: 0 0 20px #00ff66;
+    }
+
+    .holo-content p {
+      font-size: 1rem;
+      letter-spacing: 4px;
+      margin-top: 10px;
+      color: #fff;
+    }
+
+    /* Back to Showcase Button Styling */
+    .back-btn {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      color: #00ff66;
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 1rem;
+      border: 1px solid #00ff66;
+      background: rgba(0, 10, 3, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      z-index: 100;
+      text-transform: uppercase;
+      font-weight: bold;
+      cursor: pointer !important;
+    }
+    .back-btn:hover { 
+      background: #00ff66; 
+      color: #000;
+      box-shadow: 0 0 15px #00ff66;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back to Showcase</a>
+
+  <div class="holo-content" id="targetBox">
+    <h1>CYBER CORE</h1>
+    <p>[ VOLUMETRIC LASER SCANNER ACTIVE ]</p>
+  </div>
+
+  <canvas id="laserCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('laserCanvas');
+    const ctx = canvas.getContext('2d');
+    const targetBox = document.getElementById('targetBox');
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    const mouse = { x: width / 2, y: height / 2 };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    let time = 0;
+    const RAMP = ' .:-=+*#%@';
+
+    function render() {
+      time += 0.05;
+      ctx.fillStyle = '#000301';
+      ctx.fillRect(0, 0, width, height);
+
+      // Get target bounding box geometry for 3D laser collision
+      const rect = targetBox.getBoundingClientRect();
+
+      const numScanlines = 60;
+      const coneAngle = Math.PI / 3; // 60 degree projection cone
+
+      ctx.lineWidth = 1;
+
+      // Render 3D Laser Raycast Cone from Mouse Cursor
+      for (let i = 0; i < numScanlines; i++) {
+        const angle = (i / numScanlines - 0.5) * coneAngle + Math.PI / 2;
+        
+        const rayLength = 600;
+        const targetX = mouse.x + Math.cos(angle) * rayLength;
+        const targetY = mouse.y + Math.sin(angle) * rayLength;
+
+        // Check intersection with DOM box
+        let hitDepth = 1.0;
+        let isHit = false;
+
+        // Simple Ray-Box collision check
+        if (targetX > rect.left && targetX < rect.right && targetY > rect.top && targetY < rect.bottom) {
+          hitDepth = 0.6; // Surface elevation bump on UI element
+          isHit = true;
+        }
+
+        // Draw dynamic laser projection line
+        const endX = mouse.x + Math.cos(angle) * rayLength * hitDepth;
+        const endY = mouse.y + Math.sin(angle) * rayLength * hitDepth;
+
+        // Volumetric beam glow
+        const grad = ctx.createLinearGradient(mouse.x, mouse.y, endX, endY);
+        grad.addColorStop(0, 'rgba(0, 255, 102, 0.9)');
+        grad.addColorStop(0.8, 'rgba(0, 255, 102, 0.2)');
+        grad.addColorStop(1, isHit ? 'rgba(255, 255, 255, 1)' : 'rgba(0, 255, 102, 0)');
+
+        ctx.strokeStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(mouse.x, mouse.y);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+
+        // Render laser hit point ASCII particle
+        if (isHit || Math.random() < 0.3) {
+          const char = RAMP[Math.floor(Math.random() * RAMP.length)];
+          ctx.font = 'bold 14px monospace';
+          ctx.fillStyle = isHit ? '#ffffff' : '#00ff66';
+          ctx.fillText(char, endX, endY);
+        }
+      }
+
+      // Render Projector Emitter Lens Cursor
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(mouse.x, mouse.y, 12, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#00ff66';
+      ctx.beginPath();
+      ctx.arc(mouse.x, mouse.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      requestAnimationFrame(render);
+    }
+
+    render();
+  </script>
+</body>
+</html>
