@@ -229,7 +229,22 @@ function triggerWin() {
     }, 1500);
 }
 
-function loop() {
+let lastTime = 0;
+let frameCounter = 0;
+
+function loop(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    let dt = timestamp - lastTime;
+    lastTime = timestamp;
+    
+    if (dt > 100) dt = 16.66; // cap dt for lag spikes
+    
+    // Calculate a multiplier relative to 60fps (16.66ms per frame)
+    // If the user was running at 144Hz previously, it ran 2.4x faster.
+    // Let's multiply the base speeds by 2.0 so it feels fast and responsive 
+    // at 60fps (which is likely what GitHub pages is capped to on their browser/laptop).
+    const timeScale = (dt / 16.66) * 2.0; 
+
     if (gameOver || gameWon) {
         if (!gameWon) {
             const overlay = document.getElementById('flappy-overlay');
@@ -248,14 +263,15 @@ function loop() {
     }
 
     if (gamePaused) {
+        lastTime = timestamp; // Prevent jump after unpausing
         animationId = requestAnimationFrame(loop);
         return;
     }
 
     if (gameStarted) {
         // --- PHYSICS ---
-        bird.velocity += bird.gravity;
-        bird.y += bird.velocity;
+        bird.velocity += bird.gravity * timeScale;
+        bird.y += bird.velocity * timeScale;
 
         // Twist checks
         if (score === 3 && !invertedGravity) {
@@ -275,7 +291,9 @@ function loop() {
         }
 
         // Pipe Spawning
-        if (frames % 200 === 0) {
+        frameCounter += timeScale;
+        if (frameCounter >= 150) { // Spawns adjusted for the timeScale
+            frameCounter = 0;
             let gap = 300;
             const minHeight = 50;
             if (canvas.height < gap + minHeight * 2) {
@@ -297,11 +315,11 @@ function loop() {
         // Update Pipes
         for (let i = 0; i < pipes.length; i++) {
             let p = pipes[i];
-            p.x -= 1.5; // speed
+            p.x -= 1.5 * timeScale; // speed scaled
             
             if (movingPipes) {
                 // Oscillate gap up and down
-                p.top += Math.sin((frames / 20) + p.timeOffset) * 2;
+                p.top += Math.sin((frames / 20) + p.timeOffset) * 2 * timeScale;
             }
 
             // Collision detection
@@ -337,15 +355,15 @@ function loop() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw grid/terminal background lines (aesthetic)
+    // Draw grid/terminal background lines (aesthetic) - OPTIMIZED
     ctx.strokeStyle = '#020';
     ctx.lineWidth = 1;
+    ctx.beginPath();
     for(let i=0; i<canvas.height; i+=40) {
-        ctx.beginPath();
         ctx.moveTo(0, i);
         ctx.lineTo(canvas.width, i);
-        ctx.stroke();
     }
+    ctx.stroke();
 
     // Draw Pipes
     ctx.fillStyle = '#000';
@@ -363,11 +381,11 @@ function loop() {
         ctx.fillRect(p.x, bottomY, p.width, canvas.height - bottomY);
         ctx.strokeRect(p.x, bottomY, p.width, canvas.height - bottomY);
         
-        // Draw terminal hash patterns on pipes
+        // Draw terminal hash patterns on pipes - OPTIMIZED
         ctx.fillStyle = '#0f0';
         ctx.font = '10px monospace';
-        for(let yy = 10; yy < p.top; yy+=15) ctx.fillText('//', p.x + 15, yy);
-        for(let yy = bottomY + 15; yy < canvas.height; yy+=15) ctx.fillText('//', p.x + 15, yy);
+        for(let yy = 20; yy < p.top; yy+=30) ctx.fillText('//', p.x + 15, yy);
+        for(let yy = bottomY + 20; yy < canvas.height; yy+=30) ctx.fillText('//', p.x + 15, yy);
         ctx.fillStyle = '#000';
     }
 
